@@ -1,0 +1,5 @@
+bin/
+dist/
+/.vscode/
+/.idea
+/cmd/cmd

@@ -1,0 +1,14 @@
+services:
+  frontend:
+    image: nginx
+    container_name: frontend
+    volumes:
+      - project-data:/data
+
+volumes:
+  project-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "${TEST_DIR}"
