@@ -2,7 +2,7 @@
 
 A docker compose enhanced tool. 
 
-> Base on [docker/compose v2.6.1](https://github.com/docker/compose), Follow official updates unscheduled.
+> Base on [docker/compose v2.9.0](https://github.com/docker/compose), Follow official updates unscheduled.
 
 ---
 
@@ -10,7 +10,7 @@ Additional support:
 
 - HOOKs
 
-  executing shell, command, [golang script](https://github.com/goplus/gop
+  executing shell, command, [golang+ script](https://github.com/goplus/gop
   )(via [interpreter](https://github.com/goplus/igop))
 
 - Copy file/folder from the image to the local filesystem.
