@@ -28,10 +28,11 @@ Additional support:
 
 Copy the [release](https://github.com/fly-studio/docker-compose/releases) to 
 ```
-/usr/libexec/docker/cli-plugins/docker-compose 
+$ wget https://github.com/fly-studio/docker-compose/releases/latest/docker-compose -O /usr/libexec/docker/cli-plugins/docker-compose 
+$ chmod +x /usr/libexec/docker/cli-plugins/docker-compose 
 ```
 
-or (`ln -s` is recommended)
+and (`ln -s` is recommended)
 
 ```
 /usr/bin/docker-compose
@@ -124,13 +125,15 @@ services:
       pre-deploy:
         - ["mkdir", "-p", "/local/nginx/conf.d/vhosts"]
         - ["docker", "compose", "cpi", "nginx", "/etc/nginx/:/local/"]
-        - ["sh", "-c", "echo 'include conf.d/vhosts/*.conf' > /local/nginx/conf.d/vhosts.conf"]  
+        - ["sh", "-c", "echo 'include conf.d/vhosts/*.conf;' > /local/nginx/conf.d/vhosts.conf"]  
       post-deploy:
         - ["echo", "scoped post-deploy"]
 ```
 
+See `examples/docker-compose.yaml`
+
 ```
-$ docker compose deploy --pull always --hook
+$ docker compose deploy --pull always --hook -d
 ```
 
 #### Execution sequence
@@ -161,4 +164,4 @@ $ docker -f /a/b/docker-compose.yml deploy --hook
  - Execute Golang script from `x-key`
  - Custom arguments
 
-  see [Command of Hooks](docs/hooks-command.md)
+See `examples/docker-compose.yaml`

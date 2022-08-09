@@ -1,32 +1,38 @@
-x-hooks:
-  pre-deploy:
-    - ["cp", "conf/app.json", "/etc/other.json"]
-    - ["sh", "scripts/abc.sh"]
-    - ["shell-key", "x-a-b-shell"]
-    - ["igo-key", "x-b-c-igo"]
-    - ["igo-path", "scripts/main.go"]
-
-  post-deploy:
-    - ["echo", "deployment successful"]
-
-
-x-a-b-shell: |
-  #!/bin/bash
-  echo "3, x-a-b-shell inline:"
-  if [ $# -gt 0 ]; then
-    echo "$@";
-  fi
-
-x-b-c-igo: |
-  import "fmt"
-  fmt.Printf("4, x-b-c-igo inline: %+q\n", os.Args)
-
-
 services:
-  service-1:
+  nginx:
     image: nginx:latest
     container_name: nginx-1
+    volumes:
+      - /local/nginx/:/etc/nginx/
 
-  service-2:
-    image: redis:latest
-    container_name: redis-2
+    # Use scoped x-key preferentially
+    x-inline-shell: |
+      #!/bin/bash
+      echo "---inline shell---"
+      echo 'include "conf.d/vhosts/*.conf";' > /local/nginx/conf.d/vhosts.conf
+    x-inline-go: |
+      import "fmt"
+      import "os"
+      fmt.Printf("---inline Go+---\n")
+      fmt.Printf(" + os.Args: %+q\n", os.Args)
+
+    x-hooks:
+      pre-deploy:
+        - ["mkdir", "-p", "/local/nginx/conf.d/vhosts"]
+        - ["docker", "compose", "cpi", "nginx", "/etc/nginx:/local"]
+        - [ "shell-key", "x-inline-shell" ]
+        - [ "igo-key", "x-inline-go", "--argument1", "value1" ]
+        - [ "igo-path", "scripts/main.go", "--argument2", "value2", "--argument3" ]
+
+      post-deploy:
+        - [ "echo", "----deployment successful----" ]
+        - [ "sh", "-c", "echo 'Done' > 'result.txt'"]
+        - [ "igo-key", "x-inline2-go", "--argument4", "value4" ]  # x-inline2-go is not in the scoped x-key, use global
+
+
+# global x-key
+x-inline2-go: |
+  import "fmt"
+  import "os"
+  fmt.Printf("---inline2 Go+---\n")
+  fmt.Printf(" + os.Args: %+q\n", os.Args)
