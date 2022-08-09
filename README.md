@@ -47,7 +47,7 @@ docker compose [OPTIONS] cpi [SERVICE] [PATH_IN_IMAGE:LOCAL_PATH...] [--follow-l
 
 Copy a file/folder from the image of the SERVICE to the local filesystem
 
-|                               |                                                                           |
+| Name                          | Description                                                               |
 |-------------------------------|---------------------------------------------------------------------------|
 | [OPTIONS]                     | The options of [docker compose --help](docs/reference/compose.md#Options) |
 | [SERVICE]                     | The service name that you want to copy from                               |
@@ -85,7 +85,7 @@ docker compose [OPTIONS] deploy [SERVICE...] [OPTIONS_OF_UP] [--pull always] [--
 
 Creating and starting containers with HOOKs, the usage is similar to [docker compose up](docs/reference/compose_up.md).
 
-|                 | Values                       | Default |                                                                                                                    |
+| Name            | Values                       | Default | Description                                                                                                        |
 |-----------------|------------------------------|---------|--------------------------------------------------------------------------------------------------------------------|
 | [OPTIONS]       |                              |         | The options of [docker compose --help](docs/reference/compose.md#Options)                                          |
 | [SERVICE...]    |                              |         | The list of services that you want to `up`                                                                         |
@@ -95,11 +95,11 @@ Creating and starting containers with HOOKs, the usage is similar to [docker com
 
 docker-compose.yml
 
-|               | Types |                   |           |
-|---------------|-------|-------------------|-----------|
-| x-hooks       |       | Global<br/>Scoped | the hooks |
-| · pre-deploy  | Array |                   | command   |
-| · post-deploy | Array |                   | command   |
+| Name          | Types |                   | Description |
+|---------------|-------|-------------------|-------------|
+| x-hooks       |       | Global<br/>Scoped | the hooks   |
+| · pre-deploy  | Array |                   | command     |
+| · post-deploy | Array |                   | command     |
 
 #### Examples
 
