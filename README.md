@@ -11,7 +11,7 @@ Additional support:
 - HOOKs
 
   executing shell, command, [golang+ script](https://github.com/goplus/gop
-  )(via [interpreter](https://github.com/goplus/igop))
+  )(via [interpreter](https://github.com/goplus/igop)) 
 
 - Copy file/folder from the image to the local filesystem.
 
@@ -42,23 +42,26 @@ or (`ln -s` is recommended)
 ### Copy from image
 
 ```
-docker compose [OPTIONS] cpi [SERVICE] [PATH_IN_IMAGE:LOCAL_PATH...] --follow-link
+docker compose [OPTIONS] cpi [SERVICE] [PATH_IN_IMAGE:LOCAL_PATH...] [--follow-link]
 ```
 
 Copy a file/folder from the image of the SERVICE to the local filesystem
 
-- `[OPTIONS]`: the options of `docker compose --help`
-- `[SERVICE]`: the service name that you want to copy from
-- `[PATH_IN_IMAGE:LOCAL_PATH...]`: Array 
-  - `PATH_IN_IMAGE`: the source path in the image of the `[SERVICE]`
-  - `LOCAL_PATH`: the destination path of local filesystem
-- `--follow-link | -L`: always follow symbol link in `[PATH_IN_IMAGE]`
+|                               | Types |                                                                           |
+|-------------------------------|-------|---------------------------------------------------------------------------|
+| [OPTIONS]                     |       | the options of [docker compose --help](docs/reference/compose.md#Options) |
+| [SERVICE]                     |       | the service name that you want to copy from                               |
+| [PATH_IN_IMAGE:LOCAL_PATH...] | Array |                                                                           |
+| · PATH_IN_IMAGE               |       | the source path in the image of the `[SERVICE]`                           |
+| · LOCAL_PATH                  |       | the destination path of local filesystem                                  |
+| --follow-link <br/>-L         |       | always follow symbol link in `[PATH_IN_IMAGE]`                            |  
+
 
 #### LOCAL_PATH 
 
-- Can be a directory when `PATH_IN_IMAGE` is a file or folder
-- Can be a file when `PATH_IN_IMAGE` is a file
-- **the base directory of `LOCAL_PATH` MUST exist** 
+- Can be a DIRECTORY when `PATH_IN_IMAGE` is a file or directory
+- Can be a FILE when `PATH_IN_IMAGE` is a file
+- **The base directory of `LOCAL_PATH` MUST exist** 
 
 | PATH_IN_IMAGE | LOCAL_PATH folder | LOCAL_PATH file |
 |---------------|-------------------|-----------------|
@@ -68,8 +71,8 @@ Copy a file/folder from the image of the SERVICE to the local filesystem
 #### Examples
 
 ```
-mkdir -p /local/nginx/  ## path must exist ##
-docker compose -f "/a/b/docker-compose.yaml" cpi nginx \
+$ mkdir -p /local/nginx/  ## path must exist ##
+$ docker compose -f "/a/b/docker-compose.yaml" cpi nginx \
   /etc/nginx/conf:/local/nginx/ \ 
   /etc/resolve.conf:/local/resolve.conf
 ```
@@ -77,55 +80,72 @@ docker compose -f "/a/b/docker-compose.yaml" cpi nginx \
 ### Hooks
 
 ```
-docker compose [OPTIONS] deploy [SERVICE...] [OPTIONS_OF_UP] --pull --hook
+docker compose [OPTIONS] deploy [SERVICE...] [OPTIONS_OF_UP] [--pull always] [--hook]
 ```
 
-Create and start containers with HOOKs, the usage is similar to `docker compose up`.
+Creating and starting containers with HOOKs, the usage is similar to [docker compose up](docs/reference/compose_up.md).
 
-- `[OPTIONS]`: the options of `docker compose --help`
-- `[SERVICE...]`: the list of services that you want to `up`
-- `[OPTIONS_OF_UP]`: the options of `docker compose up --help`
-- `--pull` (default: false): pull the image before `up`
-- `--hook` (default: false): executing commands before/after `up`
+|                 | Values                       |                                                                                                                                      |
+|-----------------|------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| [OPTIONS]       |                              | the options of [docker compose --help](docs/reference/compose.md#Options)                                                            |
+| [SERVICE...]    |                              | the list of services that you want to `up`                                                                                           |
+| [OPTIONS_OF_UP] |                              | the options of [docker compose up --help](docs/reference/compose_up.md#Options)                                                      |
+| --pull          | missing<br/>always<br/>never | (default: missing) pull the images before `up` <br/> reuse by the option of `--build` (build the images before starting containers.) |
+| --hook          |                              | (default: false) enable executing commands before/after `up`                                                                         | 
 
-> You can specify any custom arguments(see [cli example](docs/hooks-command.md#Quick-start)), they can be read in the shell/golang scripts
 
-#### Example
+#### Examples
+
+- copy the config files from the image of 'nginx'
+- create a config file to /local/nginx/conf.d/vhosts.conf
+- mounting the path of config to container of 'nginx'
+
 ```
 x-hooks:
   pre-deploy:
-    - ["command", "args"]  
+    - ["echo", "golbal pre-deploy"]  
   post-deploy:
-    - ["command", "args"]
+    - ["echo", "golbal post-deploy"]
     
 services:
   nginx:
     image: nginx:latest
+    volumes:
+      - /local/nginx/:/etc/nginx/
     x-hooks:
       pre-deploy:
-        - ["command", "args"]  
+        - ["mkdir", "-p", "/local/nginx/conf.d/vhosts"]
+        - ["docker", "compose", "cpi", "nginx", "/etc/nginx/:/local/"]
+        - ["sh", "-c", "echo 'include conf.d/vhosts/*.conf' > /local/nginx/conf.d/vhosts.conf"]  
       post-deploy:
-        - ["command", "args"]
+        - ["echo", "scoped post-deploy"]
 ```
 
-- **pre-deploy**: Array of command
-
-- **post-deploy**: Array of command
+|             | Types |         |
+|-------------|-------|---------|
+| pre-deploy  | Array | command |
+| post-deploy | Array | command |
 
 #### Execution sequence
 
-1. `docker compose pull [SERVICE...]` if `--pull` be specified
-2. Global pre-deploy 
-3. pre-deploy of each service of `[SERVICE...]`
+1. `docker compose pull [SERVICE...]` if `--pull always` be specified
+2. Global _pre-deploy_ 
+3. _pre-deploy_ of each service of `[SERVICE...]`
 4. `docker compose up [SERVICE...]`
-5. post-deploy of each service of `[SERVICE...]`
-6. Global post-deploy
+5. _post-deploy_ of each service of `[SERVICE...]`
+6. Global _post-deploy_
 
-#### Relative path/working directory
+#### Relative path, working directory
 
-1. Path in the command is relative to the directory of `docker-compose.yaml`,  eg: `scripts/main.go` is `/a/b/scripts/main.go`
+```yaml
+docker -f /a/b/docker-compose.yml deploy
+```
 
-2. Working directory is the directory of `docker-compose.yaml`, eg: `/a/b/`
+1. Working directory is the directory of `docker-compose.yaml`, eg: `/a/b/`
+
+2. Path in the command is relative to the directory of `docker-compose.yaml`,
+   - `- ["sh", "-c", "echo 'xxx' >> scripts/main.txt"`, the real path of `scripts/main.txt` is `/a/b/scripts/main.txt`
+
 
 #### Command usage
 
