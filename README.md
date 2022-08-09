@@ -86,21 +86,21 @@ docker compose [OPTIONS] deploy [SERVICE...] [OPTIONS_OF_UP] [--pull always] [--
 
 Creating and starting containers with HOOKs, the usage is similar to [docker compose up](docs/reference/compose_up.md).
 
-| Name            | Values                       | Default | Description                                                                                                        |
-|-----------------|------------------------------|---------|--------------------------------------------------------------------------------------------------------------------|
-| [OPTIONS]       |                              |         | The options of [docker compose --help](docs/reference/compose.md#Options)                                          |
-| [SERVICE...]    |                              |         | The list of services that you want to `up`                                                                         |
-| [OPTIONS_OF_UP] |                              |         | The options of [docker compose up --help](docs/reference/compose_up.md#Options)                                    |
-| --pull          | missing<br/>always<br/>never | missing | Pull the images before `up`. <br/> Reuse by the option of `--build` (build the images before starting containers.) |
-| --hook          |                              | false   | Enable executing commands before/after `up`                                                                        | 
+| Name            | Default | Description                                                                    |
+|-----------------|---------|--------------------------------------------------------------------------------|
+| [OPTIONS]       |         | The options of [docker compose --help](docs/reference/compose.md#Options)      |
+| [SERVICE...]    |         | The list of services that you want to `up`                                     |
+| [OPTIONS_OF_UP] |         | The options of [docker compose up --help](docs/reference/compose_up.md#Options) |
+| --pull missing \| always \| never  | missing | Pull the images before `up`. <br/> Reuse by the option of `--build` (build the images before starting containers.) |
+| --hook          | false   | Enable executing commands before/after `up`                                    | 
 
 docker-compose.yml
 
-| Name          | Types |                   | Description |
-|---------------|-------|-------------------|-------------|
-| x-hooks       |       | Global<br/>Scoped | the hooks   |
-| · pre-deploy  | Array |                   | command     |
-| · post-deploy | Array |                   | command     |
+| Name          | Types | Description                                       |
+|---------------|-------|---------------------------------------------------|
+| x-hooks       |       | The Global/Scoped of hooks                        |
+| · pre-deploy  | Array | Command, igo-key, igo-path, shell-key, shell-path |
+| · post-deploy | Array | Command, igo-key, igo-path, shell-key, shell-path |
 
 #### Examples
 
@@ -160,9 +160,22 @@ $ docker -f /a/b/docker-compose.yml deploy --hook
 
 #### Command ADVANCED usage
 
- - Execute a Go+ script file, a Golang project
- - Execute Shell from `x-key`
- - Execute Golang script from `x-key`
- - Custom arguments
+- Go
+  - Execute a Go+ script file, a Golang project
+  
+    `["igo-path", "/path/to/file.go"]`
+  - Execute Golang script from _x-key_
+  
+    `["igo-key", "x-key"]`
+- Shell
+  - Execute Shell from _x-key_
+  
+  `["shell-key", "x-key"]`
+  - Execute Shell file
+  
+  `["shell-path", "/path/to/file.sh"]`
+- Custom arguments
+
+  `["igo-key", "x-key", "--argument", "value"]`
 
 See `examples/docker-compose.yaml`
