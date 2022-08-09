@@ -28,14 +28,14 @@ Additional support:
 
 Copy the [release](https://github.com/fly-studio/docker-compose/releases) to 
 ```
-$ wget https://github.com/fly-studio/docker-compose/releases/latest/docker-compose -O /usr/libexec/docker/cli-plugins/docker-compose 
+$ wget https://github.com/fly-studio/docker-compose/releases/download/v2.9.0.1/docker-compose -O /usr/libexec/docker/cli-plugins/docker-compose 
 $ chmod +x /usr/libexec/docker/cli-plugins/docker-compose 
 ```
 
-and (`ln -s` is recommended)
+and copy or symlink to `/usr/bin`
 
 ```
-/usr/bin/docker-compose
+$ cp /usr/libexec/docker/cli-plugins/docker-compose /usr/bin/docker-compose
 ```
 
 ## Usage
@@ -130,10 +130,11 @@ services:
         - ["echo", "scoped post-deploy"]
 ```
 
-See `examples/docker-compose.yaml`
+See more: `examples/docker-compose.yaml`
 
 ```
-$ docker compose deploy --pull always --hook -d
+$ cd /this/project/examples/
+$ docker-compose deploy --pull always --hook -d
 ```
 
 #### Execution sequence
