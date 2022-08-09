@@ -8,7 +8,7 @@ A docker compose enhanced tool.
 
 Additional support: 
 
-- HOOKs： Executing commands before/after creating containers
+- HOOKs: Executing commands before/after creating containers
   - Shell 
   - Command
   - [Golang+ script](https://github.com/goplus/gop
@@ -98,7 +98,7 @@ docker-compose.yml
 
 | Name          | Types | Description                                       |
 |---------------|-------|---------------------------------------------------|
-| x-hooks       |       | The Global/Scoped of hooks                        |
+| x-hooks       |       | The Global/Scoped hooks                           |
 | · pre-deploy  | Array | Command, igo-key, igo-path, shell-key, shell-path |
 | · post-deploy | Array | Command, igo-key, igo-path, shell-key, shell-path |
 
@@ -109,6 +109,7 @@ docker-compose.yml
   - Create a config file to /local/nginx/conf.d/vhosts.conf
 - Mount the path of config to container of 'nginx'
 
+docker-compose.yml
 ```
 x-hooks:  # Global
   pre-deploy:
@@ -129,11 +130,8 @@ services:
       post-deploy:
         - ["echo", "scoped post-deploy"]
 ```
-
-See more: `examples/docker-compose.yaml`
-
+Deploy
 ```
-$ cd /this/project/examples/
 $ docker-compose deploy --pull always --hook -d
 ```
 
@@ -141,9 +139,9 @@ $ docker-compose deploy --pull always --hook -d
 
 1. Pull images
 2. Global _pre-deploy_ 
-3. _pre-deploy_ of each service of `[SERVICE...]`
+3. _pre-deploy_ of each service of _[SERVICE...]_
 4. Up
-5. _post-deploy_ of each service of `[SERVICE...]`
+5. _post-deploy_ of each service of _[SERVICE...]_
 6. Global _post-deploy_
 
 #### Relative path, Working directory
@@ -154,28 +152,36 @@ $ docker -f /a/b/docker-compose.yml deploy --hook
 
 1. Working directory is the directory of `docker-compose.yaml`, eg: `/a/b/`
 
-2. Path in the command is relative to the directory of `docker-compose.yaml`,
-   - `- ["sh", "-c", "echo 'xxx' >> scripts/main.txt"`, the real path of `scripts/main.txt` is `/a/b/scripts/main.txt`
+2. Path in the command is relative to the directory of `docker-compose.yaml`
+  ```
+  - ["sh", "-c", "echo 'xxx' >> scripts/main.txt"
+  ```
+  the real path of `scripts/main.txt` is `/a/b/scripts/main.txt`
 
 
 #### Command ADVANCED usage
 
-- Go
-  - Execute a Go+ script file, a Golang project
-  
-    `["igo-path", "/path/to/file.go"]`
-  - Execute Golang script from _x-key_
-  
-    `["igo-key", "x-key"]`
-- Shell
-  - Execute Shell from _x-key_
-  
-  `["shell-key", "x-key"]`
-  - Execute Shell file
-  
-  `["shell-path", "/path/to/file.sh"]`
-- Custom arguments
-
-  `["igo-key", "x-key", "--argument", "value"]`
+##### Go
+- Execute a Go+ script file, a Golang project
+  ```
+  ["igo-path", "/path/to/file.go"]
+  ```
+- Execute Golang scripts from _x-key_
+  ```
+  ["igo-key", "x-key"]
+  ```
+##### Shell
+- Execute Shell from _x-key_
+  ```
+  ["shell-key", "x-key"]
+  ```
+- Execute Shell file
+  ```
+  ["shell-path", "/path/to/file.sh"]
+  ```
+##### Custom arguments
+  ```
+  ["igo-key", "x-key", "--argument", "value"]
+  ```
 
 See `examples/docker-compose.yaml`
