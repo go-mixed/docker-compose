@@ -1,4 +1,4 @@
-# Docker Compose v2 +
+# Docker Compose v2.9.0.1
 
 A docker compose enhanced tool. 
 
@@ -8,9 +8,10 @@ A docker compose enhanced tool.
 
 Additional support: 
 
-- HOOKs
-
-  executing shell, command, [golang+ script](https://github.com/goplus/gop
+- HOOKs： Executing commands before/after creating containers
+  - Shell 
+  - Command
+  - [Golang+ script](https://github.com/goplus/gop
   )(via [interpreter](https://github.com/goplus/igop)) 
 
 - Copy file/folder from the image to the local filesystem.
@@ -22,7 +23,6 @@ Additional support:
 - [Usage](#Usage)
   - [Copy from image](#Copy-from-image)
   - [Hooks](#Hooks)
-- [Golang script](#Golang-script)
 
 ## Install
 
@@ -47,14 +47,14 @@ docker compose [OPTIONS] cpi [SERVICE] [PATH_IN_IMAGE:LOCAL_PATH...] [--follow-l
 
 Copy a file/folder from the image of the SERVICE to the local filesystem
 
-|                               | Types |                                                                           |
-|-------------------------------|-------|---------------------------------------------------------------------------|
-| [OPTIONS]                     |       | the options of [docker compose --help](docs/reference/compose.md#Options) |
-| [SERVICE]                     |       | the service name that you want to copy from                               |
-| [PATH_IN_IMAGE:LOCAL_PATH...] | Array |                                                                           |
-| · PATH_IN_IMAGE               |       | the source path in the image of the `[SERVICE]`                           |
-| · LOCAL_PATH                  |       | the destination path of local filesystem                                  |
-| --follow-link <br/>-L         |       | always follow symbol link in `[PATH_IN_IMAGE]`                            |  
+|                               |                                                                           |
+|-------------------------------|---------------------------------------------------------------------------|
+| [OPTIONS]                     | The options of [docker compose --help](docs/reference/compose.md#Options) |
+| [SERVICE]                     | The service name that you want to copy from                               |
+| [PATH_IN_IMAGE:LOCAL_PATH...] | Array                                                                     |
+| · PATH_IN_IMAGE               | The source path in the image of the `[SERVICE]`                           |
+| · LOCAL_PATH                  | The destination path of local filesystem                                  |
+| --follow-link <br/>-L         | Always follow symbol link in `[PATH_IN_IMAGE]`                            |  
 
 
 #### LOCAL_PATH 
@@ -85,34 +85,42 @@ docker compose [OPTIONS] deploy [SERVICE...] [OPTIONS_OF_UP] [--pull always] [--
 
 Creating and starting containers with HOOKs, the usage is similar to [docker compose up](docs/reference/compose_up.md).
 
-|                 | Values                       |                                                                                                                                      |
-|-----------------|------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| [OPTIONS]       |                              | the options of [docker compose --help](docs/reference/compose.md#Options)                                                            |
-| [SERVICE...]    |                              | the list of services that you want to `up`                                                                                           |
-| [OPTIONS_OF_UP] |                              | the options of [docker compose up --help](docs/reference/compose_up.md#Options)                                                      |
-| --pull          | missing<br/>always<br/>never | (default: missing) pull the images before `up` <br/> reuse by the option of `--build` (build the images before starting containers.) |
-| --hook          |                              | (default: false) enable executing commands before/after `up`                                                                         | 
+|                 | Values                       | Default |                                                                                                                    |
+|-----------------|------------------------------|---------|--------------------------------------------------------------------------------------------------------------------|
+| [OPTIONS]       |                              |         | The options of [docker compose --help](docs/reference/compose.md#Options)                                          |
+| [SERVICE...]    |                              |         | The list of services that you want to `up`                                                                         |
+| [OPTIONS_OF_UP] |                              |         | The options of [docker compose up --help](docs/reference/compose_up.md#Options)                                    |
+| --pull          | missing<br/>always<br/>never | missing | Pull the images before `up`. <br/> Reuse by the option of `--build` (build the images before starting containers.) |
+| --hook          |                              | false   | Enable executing commands before/after `up`                                                                        | 
 
+docker-compose.yml
+
+|               | Types |                   |           |
+|---------------|-------|-------------------|-----------|
+| x-hooks       |       | Global<br/>Scoped | the hooks |
+| · pre-deploy  | Array |                   | command   |
+| · post-deploy | Array |                   | command   |
 
 #### Examples
 
-- copy the config files from the image of 'nginx'
-- create a config file to /local/nginx/conf.d/vhosts.conf
-- mounting the path of config to container of 'nginx'
+- Hooks
+  - Copy the config files from the image of 'nginx'
+  - Create a config file to /local/nginx/conf.d/vhosts.conf
+- Mount the path of config to container of 'nginx'
 
 ```
-x-hooks:
+x-hooks:  # Global
   pre-deploy:
-    - ["echo", "golbal pre-deploy"]  
+    - ["echo", "global pre-deploy"]  
   post-deploy:
-    - ["echo", "golbal post-deploy"]
+    - ["echo", "global post-deploy"]
     
 services:
   nginx:
     image: nginx:latest
     volumes:
       - /local/nginx/:/etc/nginx/
-    x-hooks:
+    x-hooks:   # Scoped
       pre-deploy:
         - ["mkdir", "-p", "/local/nginx/conf.d/vhosts"]
         - ["docker", "compose", "cpi", "nginx", "/etc/nginx/:/local/"]
@@ -121,24 +129,23 @@ services:
         - ["echo", "scoped post-deploy"]
 ```
 
-|             | Types |         |
-|-------------|-------|---------|
-| pre-deploy  | Array | command |
-| post-deploy | Array | command |
+```
+$ docker compose deploy --pull always --hook
+```
 
 #### Execution sequence
 
-1. `docker compose pull [SERVICE...]` if `--pull always` be specified
+1. Pull images
 2. Global _pre-deploy_ 
 3. _pre-deploy_ of each service of `[SERVICE...]`
-4. `docker compose up [SERVICE...]`
+4. Up
 5. _post-deploy_ of each service of `[SERVICE...]`
 6. Global _post-deploy_
 
-#### Relative path, working directory
+#### Relative path, Working directory
 
-```yaml
-docker -f /a/b/docker-compose.yml deploy
+```
+$ docker -f /a/b/docker-compose.yml deploy --hook
 ```
 
 1. Working directory is the directory of `docker-compose.yaml`, eg: `/a/b/`
@@ -147,6 +154,11 @@ docker -f /a/b/docker-compose.yml deploy
    - `- ["sh", "-c", "echo 'xxx' >> scripts/main.txt"`, the real path of `scripts/main.txt` is `/a/b/scripts/main.txt`
 
 
-#### Command usage
+#### Command ADVANCED usage
+
+ - Execute a Go+ script file, a Golang project
+ - Execute Shell from `x-key`
+ - Execute Golang script from `x-key`
+ - Custom arguments
 
   see [Command of Hooks](docs/hooks-command.md)

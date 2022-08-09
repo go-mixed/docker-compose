@@ -113,7 +113,7 @@ func (h *hook) parseCommand(command types.ShellCommand, service *types.ServiceCo
 	var newCommand types.ShellCommand
 	for _, arg := range command {
 		if arg == "{ARGS}" {
-			newCommand = append(newCommand, os.Args[2:]...)
+			newCommand = append(newCommand, os.Args[2:]...) // Todo: 需兼容docker-compose, docker compose两种指令方式
 		} else {
 			newCommand = append(newCommand, arg)
 		}
