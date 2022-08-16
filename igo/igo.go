@@ -1,10 +1,11 @@
 package igo
 
 import (
+	"fmt"
 	"github.com/compose-spec/compose-go/types"
+	"github.com/docker/compose/v2/igo/mod"
 	"github.com/goplus/igop"
 	"github.com/goplus/igop/gopbuild"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -19,15 +20,12 @@ func init() {
 		Path: "igo",
 		Deps: map[string]string{
 			"github.com/compose-spec/compose-go/types": "types",
-			"github.com/spf13/cobra":                   "cobra",
-			"github.com/bitly/go-simplejson":           "simplejson",
 		},
 		Interfaces: map[string]reflect.Type{},
 		AliasTypes: map[string]reflect.Type{},
 		NamedTypes: map[string]reflect.Type{},
 		Vars:       map[string]reflect.Value{},
 		Funcs: map[string]reflect.Value{
-			"GetCmd":     reflect.ValueOf(GetCmd),
 			"GetService": reflect.ValueOf(GetService),
 			"GetProject": reflect.ValueOf(GetProject),
 		},
@@ -37,17 +35,12 @@ func init() {
 }
 
 type IGo struct {
-	Cmd     *cobra.Command
 	Project *types.Project
 	Service *types.ServiceConfig
 	Args    types.ShellCommand
 }
 
 var globalIGo IGo
-
-func GetCmd() *cobra.Command {
-	return globalIGo.Cmd
-}
 
 func GetService() *types.ServiceConfig {
 	return globalIGo.Service
@@ -74,13 +67,24 @@ func (i *IGo) RunPath(path string) error {
 
 	ctx := igop.NewContext(0)
 
-	if containsExt(path, ".gop") {
+	// 读取go.mod/vendor
+	modules, err := mod.NewModules(path, filepath.Join(path, "vendor"))
+	if err != nil {
+		return err
+	}
+	ctx.Lookup = modules.Lookup
+
+	// 检查目录下是否有gop文件
+	gopCount := countByExt(path, ".gop")
+	if gopCount == 1 {
 		if err := gopBuildDir(ctx, path); err != nil {
 			return err
 		}
+	} else if gopCount > 1 {
+		return fmt.Errorf("there can be one *.gop in PROJECT compile mode")
 	}
 
-	_, err := igop.Run(path, i.Args, 0)
+	_, err = igop.Run(path, i.Args, 0)
 	return err
 }
 
@@ -92,15 +96,16 @@ func gopBuildDir(ctx *igop.Context, path string) error {
 	return os.WriteFile(filepath.Join(path, "gop_autogen.go"), data, 0666)
 }
 
-func containsExt(srcDir string, ext string) bool {
+func countByExt(srcDir string, ext string) int {
+	extCount := 0
 	if f, err := os.Open(srcDir); err == nil {
 		defer f.Close()
 		fis, _ := f.Readdir(-1)
 		for _, fi := range fis {
 			if !fi.IsDir() && filepath.Ext(fi.Name()) == ext {
-				return true
+				extCount++
 			}
 		}
 	}
-	return false
+	return extCount
 }

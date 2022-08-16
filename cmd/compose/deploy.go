@@ -39,19 +39,15 @@ func deployCommand(p *projectOptions, dockerCli command.Cli, backend api.Service
 			pull.quiet = create.quietPull
 			return validateFlags(&up, &create)
 		}),
-		RunE: p.WithServices(func(ctx context.Context, project *types.Project, services []string) error {
-			create.ignoreOrphans = utils.StringToBool(project.Environment["COMPOSE_IGNORE_ORPHANS"])
-			if create.ignoreOrphans && create.removeOrphans {
-				return fmt.Errorf("COMPOSE_IGNORE_ORPHANS and --remove-orphans cannot be combined")
-			}
-			return runDeploy(ctx, dockerCli, backend, create, up, pull, project, services)
-		}),
 		ValidArgsFunction: serviceCompletion(p),
 	}
-
-	// 將cmd通過context傳遞
-	ctx := context.WithValue(context.Background(), "cmd", deployCmd)
-	deployCmd.SetContext(ctx)
+	deployCmd.RunE = p.WithServices(func(ctx context.Context, project *types.Project, services []string) error {
+		create.ignoreOrphans = utils.StringToBool(project.Environment["COMPOSE_IGNORE_ORPHANS"])
+		if create.ignoreOrphans && create.removeOrphans {
+			return fmt.Errorf("COMPOSE_IGNORE_ORPHANS and --remove-orphans cannot be combined")
+		}
+		return runDeploy(ctx, deployCmd, backend, create, up, pull, project, services)
+	})
 
 	flags := deployCmd.Flags()
 	flags.BoolVarP(&up.Detach, "detach", "d", false, "Detached mode: Run containers in the background")
@@ -81,15 +77,11 @@ func deployCommand(p *projectOptions, dockerCli command.Cli, backend api.Service
 	return deployCmd
 }
 
-func runDeploy(ctx context.Context, dockerCli command.Cli, backend api.Service, createOptions createOptions, upOptions upOptions, pullOptions pullOptions, project *types.Project, services []string) error {
+func runDeploy(ctx context.Context, cmd *cobra.Command, backend api.Service, createOptions createOptions, upOptions upOptions, pullOptions pullOptions, project *types.Project, services []string) error {
 	if len(project.Services) == 0 {
 		return fmt.Errorf("no service selected")
 	}
 
-	cmd, ok := ctx.Value("cmd").(*cobra.Command)
-	if !ok {
-		panic("cannot get the cmd from context")
-	}
 	hookEnable, _ := cmd.Flags().GetBool("hook")
 	if createOptions.Pull == "always" {
 		if err := runPull(ctx, backend, pullOptions, services); err != nil {
@@ -99,7 +91,7 @@ func runDeploy(ctx context.Context, dockerCli command.Cli, backend api.Service, 
 
 	// 啟動hook
 	if hookEnable {
-		h := newHook(ctx, cmd, dockerCli, backend, project)
+		h := newHook(ctx, cmd, backend, project)
 		// 解析x-hooks
 		if err := h.parse(); err != nil {
 			return err

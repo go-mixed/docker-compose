@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/compose-spec/compose-go/loader"
 	"github.com/compose-spec/compose-go/types"
-	"github.com/docker/cli/cli/command"
 	"github.com/docker/compose/v2/igo"
 	"github.com/docker/compose/v2/pkg/api"
 	"github.com/sanathkr/go-yaml"
@@ -20,26 +19,27 @@ import (
 type xHooks struct {
 	PreDeploy  []types.ShellCommand `mapstructure:"pre-deploy"`
 	PostDeploy []types.ShellCommand `mapstructure:"post-deploy"`
+
+	PreUndeploy  []types.ShellCommand `mapstructure:"pre-undeploy"`
+	PostUndeploy []types.ShellCommand `mapstructure:"post-undeploy"`
 }
 
 type hook struct {
-	ctx       context.Context
-	cmd       *cobra.Command
-	project   *types.Project
-	backend   api.Service
-	dockerCli command.Cli
+	ctx     context.Context
+	cmd     *cobra.Command
+	project *types.Project
+	backend api.Service
 
 	globalHooks   xHooks
 	servicesHooks map[string]xHooks
 }
 
-func newHook(ctx context.Context, cmd *cobra.Command, dockerCli command.Cli, backend api.Service, project *types.Project) *hook {
+func newHook(ctx context.Context, cmd *cobra.Command, backend api.Service, project *types.Project) *hook {
 	return &hook{
 		ctx:           ctx,
 		cmd:           cmd,
 		project:       project,
 		backend:       backend,
-		dockerCli:     dockerCli,
 		globalHooks:   xHooks{},
 		servicesHooks: map[string]xHooks{},
 	}
@@ -75,7 +75,7 @@ func (h *hook) PreDeploy(createOptions createOptions, upOptions upOptions, pullO
 		fmt.Printf("[Hook]pre-deploy of global\n")
 	}
 
-	return h.handle(xHook.PreDeploy, createOptions, upOptions, pullOptions, service)
+	return h.handle(xHook.PreDeploy, service)
 }
 
 func (h *hook) PostDeploy(createOptions createOptions, upOptions upOptions, pullOptions pullOptions, service *types.ServiceConfig) error {
@@ -90,10 +90,40 @@ func (h *hook) PostDeploy(createOptions createOptions, upOptions upOptions, pull
 		fmt.Printf("[Hook]post-deploy of global\n")
 	}
 
-	return h.handle(xHook.PostDeploy, createOptions, upOptions, pullOptions, service)
+	return h.handle(xHook.PostDeploy, service)
 }
 
-func (h *hook) handle(commands []types.ShellCommand, createOptions createOptions, upOptions upOptions, pullOptions pullOptions, service *types.ServiceConfig) error {
+func (h *hook) PreUndeploy(downOptions downOptions, service *types.ServiceConfig) error {
+	xHook := h.globalHooks
+	if service != nil {
+		var ok bool
+		if xHook, ok = h.servicesHooks[service.Name]; !ok { // service中不存在 x-hook则退出
+			return nil
+		}
+		fmt.Printf("[Hook]pre-undeploy of service: \"%s\"\n", service.Name)
+	} else {
+		fmt.Printf("[Hook]pre-undeploy of global\n")
+	}
+
+	return h.handle(xHook.PreUndeploy, service)
+}
+
+func (h *hook) PostUndeploy(downOptions downOptions, service *types.ServiceConfig) error {
+	xHook := h.globalHooks
+	if service != nil {
+		var ok bool
+		if xHook, ok = h.servicesHooks[service.Name]; !ok { // service中不存在 x-hook则退出
+			return nil
+		}
+		fmt.Printf("[Hook]post-undeploy of service: \"%s\"\n", service.Name)
+	} else {
+		fmt.Printf("[Hook]post-undeploy of global\n")
+	}
+
+	return h.handle(xHook.PostUndeploy, service)
+}
+
+func (h *hook) handle(commands []types.ShellCommand, service *types.ServiceConfig) error {
 	for _, command := range commands {
 		if exe := h.parseCommand(command, service); exe != nil {
 			if err := exe.run(h, service); err != nil {
@@ -197,7 +227,6 @@ func (e *execute) run(h *hook, service *types.ServiceConfig) error {
 	switch e.executeType {
 	case igoKey:
 		i := igo.IGo{
-			Cmd:     h.cmd,
 			Project: h.project,
 			Service: service,
 			Args:    e.command[2:],
@@ -205,7 +234,6 @@ func (e *execute) run(h *hook, service *types.ServiceConfig) error {
 		return i.Run(e.path, e.content)
 	case igoPath:
 		i := igo.IGo{
-			Cmd:     h.cmd,
 			Project: h.project,
 			Service: service,
 			Args:    e.command[2:],

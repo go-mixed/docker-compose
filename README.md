@@ -1,4 +1,4 @@
-# Docker Compose v2.9.0.1
+# Docker Compose v2.9.0.2
 
 A docker compose enhanced tool. 
 
@@ -6,13 +6,16 @@ A docker compose enhanced tool.
 
 ---
 
-Additional support: 
+Additional supported: 
 
-- HOOKs: Executing commands before/after creating containers
-  - Shell 
-  - Command
-  - [Golang+ script](https://github.com/goplus/gop
-  )(via [interpreter](https://github.com/goplus/igop)) 
+- HOOKs: Executing commands 
+  - `docker compose deploy` instead of `docker compose up`
+  - `docker compose undeploy` instead of `docker compose down`
+  - COMMAND
+    - CLI
+    - Shell 
+    - [Golang+ script](https://github.com/goplus/gop
+    )(via [interpreter](https://github.com/goplus/igop)) 
 
 - Copy file/folder from the image to the local filesystem.
 
@@ -78,7 +81,7 @@ $ docker compose -f "/a/b/docker-compose.yaml" cpi nginx \
   /etc/resolve.conf:/local/resolve.conf
 ```
 
-### Hooks
+### up Hooks
 
 ```
 docker compose [OPTIONS] deploy [SERVICE...] [OPTIONS_OF_UP] [--pull always] [--hook]
@@ -96,11 +99,11 @@ Creating and starting containers with HOOKs, the usage is similar to [docker com
 
 docker-compose.yml
 
-| Name          | Types | Description                                       |
-|---------------|-------|---------------------------------------------------|
-| x-hooks       |       | The Global/Scoped hooks                           |
-| · pre-deploy  | Array | Command, igo-key, igo-path, shell-key, shell-path |
-| · post-deploy | Array | Command, igo-key, igo-path, shell-key, shell-path |
+| Name          | Types | Description                                   |
+|---------------|-------|-----------------------------------------------|
+| x-hooks       |       |                                               |
+| - pre-deploy  | Array | CLI, igo-key, igo-path, shell-key, shell-path |
+| - post-deploy | Array | CLI, igo-key, igo-path, shell-key, shell-path |
 
 #### Examples
 
@@ -162,26 +165,76 @@ $ docker -f /a/b/docker-compose.yml deploy --hook
 #### Command ADVANCED usage
 
 ##### Go
-- Execute a Go+ script file, a Golang project
-  ```
-  ["igo-path", "/path/to/file.go"]
-  ```
-- Execute Golang scripts from _x-key_
-  ```
-  ["igo-key", "x-key"]
-  ```
+
+Execute a Go+ script file, a Golang project
+```
+["igo-path", "/path/to/file.go"]
+```
+
+Execute Golang scripts from _x-key_
+```
+["igo-key", "x-key"]
+```
 ##### Shell
-- Execute Shell from _x-key_
-  ```
-  ["shell-key", "x-key"]
-  ```
-- Execute Shell file
-  ```
-  ["shell-path", "/path/to/file.sh"]
-  ```
+
+Execute Shell from _x-key_
+```
+["shell-key", "x-key"]
+```
+
+Execute Shell file
+```
+["shell-path", "/path/to/file.sh"]
+```
+
 ##### Custom arguments
-  ```
-  ["igo-key", "x-key", "--argument", "value"]
-  ```
+
+Specify any arguments to _igo-key, igo-path, shell-key, shell-path_
+
+```
+["igo-key", "x-key", "--argument1", "value1", "--argument2"]
+```
 
 See `examples/docker-compose.yaml`
+
+### down Hooks
+
+```
+docker compose [OPTIONS] undeploy [SERVICE...] [OPTIONS_OF_DOWN] [--hook]
+```
+
+Stopping containers with HOOKs, the usage is similar to [docker compose down](docs/reference/compose_down.md).
+
+| Name              | Default | Description                                                                         |
+|-------------------|---------|-------------------------------------------------------------------------------------|
+| [OPTIONS]         |         | The options of [docker compose --help](docs/reference/compose.md#Options)           |
+| [SERVICE...]      |         | The list of services that you want to `down`                                        |
+| [OPTIONS_OF_DOWN] |         | The options of [docker compose down --help](docs/reference/compose_down.md#Options) |
+| --hook            | false   | Enable executing commands before/after `down`                                       | 
+
+docker-compose.yml
+
+| Name            | Types | Description                                   |
+|-----------------|-------|-----------------------------------------------|
+| x-hooks         |       |                                               |
+| - pre-undeploy  | Array | CLI, igo-key, igo-path, shell-key, shell-path |
+| - post-undeploy | Array | CLI, igo-key, igo-path, shell-key, shell-path |
+
+#### Execution sequence
+
+1. Global _pre-undeploy_
+2. _pre-undeploy_ of each service of _[SERVICE...]_
+3. Down
+4. _post-undeploy_ of each service of _[SERVICE...]_
+5. Global _post-undeploy_
+
+#### Examples
+
+docker-compose.yml
+```
+services:
+  nginx:
+    x-hooks:
+      post-undepoly:
+        - ["rm", "-rf", "/local/nginx"]
+```

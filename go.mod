@@ -8,7 +8,7 @@ require (
 	github.com/cnabio/cnab-to-oci v0.3.6
 	github.com/compose-spec/compose-go v1.4.0
 	github.com/containerd/console v1.0.3
-	github.com/containerd/containerd v1.6.7
+	github.com/containerd/containerd v1.6.8
 	github.com/distribution/distribution/v3 v3.0.0-20220729163034-26163d82560f
 	github.com/docker/buildx v0.8.2 // when updating, also update the replace rules accordingly
 	github.com/docker/cli v20.10.17+incompatible
@@ -77,7 +77,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
-	github.com/mitchellh/mapstructure v1.5.0
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/sys/signal v0.6.0 // indirect
 	github.com/moby/sys/symlink v0.2.0 // indirect
@@ -131,7 +131,7 @@ require (
 
 require (
 	github.com/bitly/go-simplejson v0.5.0
-	github.com/goplus/igop v0.8.6
+	github.com/goplus/igop v0.8.7
 	github.com/sanathkr/go-yaml v0.0.0-20170819195128-ed9d249f429b
 )
 
@@ -144,7 +144,6 @@ require (
 	github.com/petermattis/goid v0.0.0-20220712135657-ac599d9cba15 // indirect
 	github.com/qiniu/x v1.11.9 // indirect
 	github.com/visualfc/funcval v0.1.3 // indirect
-	github.com/visualfc/gomod v0.1.2 // indirect
 	github.com/visualfc/xtype v0.1.0 // indirect
 	github.com/zmap/zcrypto v0.0.0-20220605182715-4dfcec6e9a8c // indirect
 	github.com/zmap/zlint v1.1.0 // indirect
