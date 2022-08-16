@@ -68,11 +68,11 @@ func (i *IGo) RunPath(path string) error {
 	ctx := igop.NewContext(0)
 
 	// 读取go.mod/vendor
-	modules, err := mod.NewModules(path, filepath.Join(path, "vendor"))
+	modules, err := mod.NewModules(path, "")
 	if err != nil {
 		return err
 	}
-	ctx.Lookup = modules.Lookup
+	modules.SetLookup(ctx)
 
 	// 检查目录下是否有gop文件
 	gopCount := countByExt(path, ".gop")

@@ -179,7 +179,7 @@ func (h *hook) parseCommand(command types.ShellCommand, service *types.ServiceCo
 				content:     h.getXKey(newCommand[1], service),
 				executeType: shellKey,
 				work:        workDir,
-				command:     append(types.ShellCommand{"/usr/bin/sh", path}, newCommand[2:]...),
+				command:     append(types.ShellCommand{"sh", path}, newCommand[2:]...),
 			}
 		}
 	}

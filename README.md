@@ -69,11 +69,11 @@ Creating and starting containers with HOOKs, the usage is similar to [docker com
 
 docker-compose.yml
 
-| Name          | Types | Description                                   |
-|---------------|-------|-----------------------------------------------|
-| x-hooks       |       |                                               |
-| - pre-deploy  | Array | CLI, igo-key, igo-path, shell-key, shell-path |
-| - post-deploy | Array | CLI, igo-key, igo-path, shell-key, shell-path |
+| Name          | Types | Description                       |
+|---------------|-------|-----------------------------------|
+| x-hooks       |       |                                   |
+| - pre-deploy  | Array | CLI, igo-key, igo-path, shell-key |
+| - post-deploy | Array | CLI, igo-key, igo-path, shell-key |
 
 #### Examples
 
@@ -155,12 +155,12 @@ Execute Shell from _x-key_
 
 Execute Shell file
 ```
-["shell-path", "/path/to/file.sh"]
+["sh", "/path/to/file.sh"]
 ```
 
 ##### Custom arguments
 
-Specify any arguments to _igo-key, igo-path, shell-key, shell-path_
+Specify any arguments to _igo-key, igo-path, shell-key_
 
 ```
 ["igo-key", "x-key", "--argument1", "value1", "--argument2"]
@@ -185,11 +185,11 @@ Stopping containers with HOOKs, the usage is similar to [docker compose down](do
 
 docker-compose.yml
 
-| Name            | Types | Description                                   |
-|-----------------|-------|-----------------------------------------------|
-| x-hooks         |       |                                               |
-| - pre-undeploy  | Array | CLI, igo-key, igo-path, shell-key, shell-path |
-| - post-undeploy | Array | CLI, igo-key, igo-path, shell-key, shell-path |
+| Name            | Types | Description                       |
+|-----------------|-------|-----------------------------------|
+| x-hooks         |       |                                   |
+| - pre-undeploy  | Array | CLI, igo-key, igo-path, shell-key |
+| - post-undeploy | Array | CLI, igo-key, igo-path, shell-key |
 
 #### Execution sequence
 

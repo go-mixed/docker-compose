@@ -2,6 +2,7 @@ package mod
 
 import (
 	"fmt"
+	"github.com/goplus/igop"
 	"golang.org/x/mod/modfile"
 	"os"
 	"path/filepath"
@@ -23,34 +24,38 @@ type Modules struct {
 	rkeys       []string
 }
 
-func canonicalize(path string) (string, error) {
+func canonicalize(path string) string {
 	if path == "" {
-		return path, nil
+		return path
 	}
 	nPath, err := filepath.Abs(path)
 	if err != nil {
-		return path, err
+		return path
 	}
 	nPath = filepath.Clean(nPath)
-	return nPath, nil
+	return nPath
 }
 
 func NewModules(projectPath string, vendorPath string) (*Modules, error) {
-	var err error
 	var m = &Modules{modules: map[string]*Module{}}
 
-	if m.projectPath, err = canonicalize(projectPath); err != nil {
-		return nil, err
-	} else if err = m.parseGoMod(m.projectPath); err != nil {
-		return nil, err
+	m.projectPath = canonicalize(projectPath)
+	// go.mod存在
+	if stat, err := os.Stat(filepath.Join(m.projectPath, "go.mod")); err == nil && !stat.IsDir() {
+		if err = m.parseGoMod(m.projectPath); err != nil {
+			return nil, err
+		}
 	}
 
-	if vendorPath == "" { // vendor 目录没传递，退出
-		return nil, nil
-	} else if m.vendorPath, err = canonicalize(vendorPath); err != nil { // vendor 目录不存在，退出
-		return nil, nil
-	} else if err = m.parseVendor(m.vendorPath); err != nil {
-		return nil, err
+	m.vendorPath = canonicalize(vendorPath)
+	if m.vendorPath == "" { // vendor 目录没有传递，尝试使用项目下的
+		m.vendorPath = filepath.Join(m.projectPath, "vendor")
+	}
+	// vendor/modules.txt文件存在
+	if stat, err := os.Stat(filepath.Join(m.vendorPath, "modules.txt")); err == nil && !stat.IsDir() {
+		if err = m.parseVendor(m.vendorPath); err != nil {
+			return nil, err
+		}
 	}
 
 	for k := range m.modules {
@@ -100,7 +105,7 @@ func (m *Modules) parseGoMod(projectPath string) error {
 func (m *Modules) parseVendor(vendorPath string) error {
 	vendorList, err := readVendorList(vendorPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("[Vendor]%w", err)
 	}
 
 	for k, v := range vendorList.vendorMeta {
@@ -135,4 +140,8 @@ func (m *Modules) Lookup(root, pkg string) (dir string, found bool) {
 	}
 
 	return "", false
+}
+
+func (m *Modules) SetLookup(ctx *igop.Context) {
+	ctx.Lookup = m.Lookup
 }
