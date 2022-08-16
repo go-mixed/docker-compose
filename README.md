@@ -22,11 +22,19 @@ Additional supported:
 
 ## TOC
 
+- [Build](#build)
 - [Install](#install)
 - [Usage](#usage)
   - [up Hooks](#up-hooks)
   - [down Hooks](#down-hooks)
   - [Copy from image](#copy-from-image)
+
+## Build
+
+```
+$ cd /this/project/cmd
+$ go build -ldflags "-X github.com/docker/compose/v2/internal.Version=2.9.0.2" -o docker-compose
+```
 
 ## Install
 
