@@ -9,8 +9,8 @@ A docker compose enhanced tool.
 Additional supported: 
 
 - HOOKs: Executing commands 
-  - `docker compose deploy` instead of `docker compose up`
-  - `docker compose undeploy` instead of `docker compose down`
+  - Hook `docker compose up`
+  - Hook `docker compose down`
   - COMMAND
     - CLI
     - Shell 
@@ -22,64 +22,26 @@ Additional supported:
 
 ## TOC
 
-- [Install](#Install)
-- [Usage](#Usage)
-  - [Copy from image](#Copy-from-image)
-  - [Hooks](#Hooks)
+- [Install](#install)
+- [Usage](#usage)
+  - [up Hooks](#up-hooks)
+  - [down Hooks](#down-hooks)
+  - [Copy from image](#copy-from-image)
 
 ## Install
 
 Copy the [release](https://github.com/fly-studio/docker-compose/releases) to 
 ```
-$ wget https://github.com/fly-studio/docker-compose/releases/download/v2.9.0.1/docker-compose -O /usr/libexec/docker/cli-plugins/docker-compose 
+$ wget https://github.com/fly-studio/docker-compose/releases/download/v2.9.0.2/docker-compose -O /usr/libexec/docker/cli-plugins/docker-compose 
 $ chmod +x /usr/libexec/docker/cli-plugins/docker-compose 
 ```
 
-and copy or symlink to `/usr/bin`
-
+And copy or symlink to `/usr/bin`
 ```
 $ cp /usr/libexec/docker/cli-plugins/docker-compose /usr/bin/docker-compose
 ```
 
 ## Usage
-
-### Copy from image
-
-```
-docker compose [OPTIONS] cpi [SERVICE] [PATH_IN_IMAGE:LOCAL_PATH...] [--follow-link]
-```
-
-Copy a file/folder from the image of the SERVICE to the local filesystem
-
-| Name                          | Description                                                               |
-|-------------------------------|---------------------------------------------------------------------------|
-| [OPTIONS]                     | The options of [docker compose --help](docs/reference/compose.md#Options) |
-| [SERVICE]                     | The service name that you want to copy from                               |
-| [PATH_IN_IMAGE:LOCAL_PATH...] | Array                                                                     |
-| · PATH_IN_IMAGE               | The source path in the image of the `[SERVICE]`                           |
-| · LOCAL_PATH                  | The destination path of local filesystem                                  |
-| --follow-link <br/>-L         | Always follow symbol link in `[PATH_IN_IMAGE]`                            |  
-
-
-#### LOCAL_PATH 
-
-- Can be a DIRECTORY when `PATH_IN_IMAGE` is a file or directory
-- Can be a FILE when `PATH_IN_IMAGE` is a file
-- **The base directory of `LOCAL_PATH` MUST exist** 
-
-| PATH_IN_IMAGE | LOCAL_PATH folder | LOCAL_PATH file |
-|---------------|-------------------|-----------------|
-| folder        | √                 | ×               |
-| file          | √                 | √               |
-
-#### Examples
-
-```
-$ mkdir -p /local/nginx/  ## path must exist ##
-$ docker compose -f "/a/b/docker-compose.yaml" cpi nginx \
-  /etc/nginx/conf:/local/nginx/ \ 
-  /etc/resolve.conf:/local/resolve.conf
-```
 
 ### up Hooks
 
@@ -133,6 +95,7 @@ services:
       post-deploy:
         - ["echo", "scoped post-deploy"]
 ```
+
 Deploy
 ```
 $ docker-compose deploy --pull always --hook -d
@@ -238,3 +201,47 @@ services:
       post-undepoly:
         - ["rm", "-rf", "/local/nginx"]
 ```
+
+Undeploy
+```
+$ docker-compose undeploy nginx --hook
+```
+
+### Copy from image
+
+```
+docker compose [OPTIONS] cpi [SERVICE] [PATH_IN_IMAGE:LOCAL_PATH...] [--follow-link]
+```
+
+Copy a file/folder from the image of the SERVICE to the local filesystem
+
+| Name                          | Description                                                               |
+|-------------------------------|---------------------------------------------------------------------------|
+| [OPTIONS]                     | The options of [docker compose --help](docs/reference/compose.md#Options) |
+| [SERVICE]                     | The service name that you want to copy from                               |
+| [PATH_IN_IMAGE:LOCAL_PATH...] | Array                                                                     |
+| · PATH_IN_IMAGE               | The source path in the image of the `[SERVICE]`                           |
+| · LOCAL_PATH                  | The destination path of local filesystem                                  |
+| --follow-link <br/>-L         | Always follow symbol link in `[PATH_IN_IMAGE]`                            |  
+
+
+#### LOCAL_PATH
+
+- Can be a DIRECTORY when `PATH_IN_IMAGE` is a file or directory
+- Can be a FILE when `PATH_IN_IMAGE` is a file
+- **The base directory of `LOCAL_PATH` MUST exist**
+
+| PATH_IN_IMAGE | LOCAL_PATH folder | LOCAL_PATH file |
+|---------------|-------------------|-----------------|
+| folder        | √                 | ×               |
+| file          | √                 | √               |
+
+#### Examples
+
+```
+$ mkdir -p /local/nginx/  ## path must exist ##
+$ docker compose -f "/a/b/docker-compose.yaml" cpi nginx \
+  /etc/nginx/conf:/local/nginx/ \ 
+  /etc/resolve.conf:/local/resolve.conf
+```
+
