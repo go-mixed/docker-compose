@@ -154,6 +154,7 @@ func (h *hook) parseCommand(command types.ShellCommand, service *types.ServiceCo
 		case "igo-key":
 			path := filepath.Join(workDir, strings.TrimSpace(newCommand[1])+".gop")
 			return &execute{
+				env:         h.project.Environment,
 				path:        path,
 				content:     h.getXKey(newCommand[1], service),
 				executeType: igoKey,
@@ -166,6 +167,7 @@ func (h *hook) parseCommand(command types.ShellCommand, service *types.ServiceCo
 				path = filepath.Join(workDir, path)
 			}
 			return &execute{
+				env:         h.project.Environment,
 				path:        path,
 				content:     "",
 				executeType: igoPath,
@@ -175,6 +177,7 @@ func (h *hook) parseCommand(command types.ShellCommand, service *types.ServiceCo
 		case "shell-key":
 			path := filepath.Join(workDir, strings.TrimSpace(newCommand[1])+".sh")
 			return &execute{
+				env:         h.project.Environment,
 				path:        path,
 				content:     h.getXKey(newCommand[1], service),
 				executeType: shellKey,
@@ -185,6 +188,7 @@ func (h *hook) parseCommand(command types.ShellCommand, service *types.ServiceCo
 	}
 
 	return &execute{
+		env:         h.project.Environment,
 		executeType: shell,
 		command:     command,
 		work:        workDir,
@@ -212,6 +216,7 @@ const (
 )
 
 type execute struct {
+	env         map[string]string
 	path        string
 	content     string
 	work        string
@@ -227,6 +232,7 @@ func (e *execute) run(h *hook, service *types.ServiceConfig) error {
 	switch e.executeType {
 	case igoKey:
 		i := igo.IGo{
+			Env:     e.env,
 			Project: h.project,
 			Service: service,
 			Args:    e.command[2:],
@@ -234,6 +240,7 @@ func (e *execute) run(h *hook, service *types.ServiceConfig) error {
 		return i.Run(e.path, e.content)
 	case igoPath:
 		i := igo.IGo{
+			Env:     e.env,
 			Project: h.project,
 			Service: service,
 			Args:    e.command[2:],
@@ -247,7 +254,7 @@ func (e *execute) run(h *hook, service *types.ServiceConfig) error {
 	case shell:
 		yamlBuf, _ := yaml.Marshal(h.project)
 		var env []string
-		for k, v := range h.project.Environment {
+		for k, v := range e.env {
 			env = append(env, k+"="+v)
 		}
 

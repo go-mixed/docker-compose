@@ -6,7 +6,7 @@ A docker compose enhanced tool.
 
 ---
 
-Additional supported: 
+## ✨ Features: 
 
 - HOOKs: Executing commands 
   - Hook `docker compose up`
@@ -29,7 +29,7 @@ Additional supported:
   - [down Hooks](#down-hooks)
   - [Copy from image](#copy-from-image)
 
-## Build
+## ⌛ Build
 
 ```
 $ cd /this/project/cmd
@@ -49,7 +49,7 @@ And copy or symlink to `/usr/bin`
 $ cp /usr/libexec/docker/cli-plugins/docker-compose /usr/bin/docker-compose
 ```
 
-## Usage
+## ⚡ Usage
 
 ### up Hooks
 

@@ -37,6 +37,7 @@ func init() {
 type IGo struct {
 	Project *types.Project
 	Service *types.ServiceConfig
+	Env     map[string]string
 	Args    types.ShellCommand
 }
 
@@ -57,7 +58,9 @@ func (i *IGo) Run(vpath string, content string) error {
 	if vpath == "" {
 		vpath = "main.gop"
 	}
-	_, err := igop.RunFile(vpath, content, i.Args, 0)
+	ctx := igop.NewContext(0)
+
+	_, err := ctx.RunFile(vpath, content, i.Args)
 	return err
 }
 
