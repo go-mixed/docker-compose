@@ -10,6 +10,13 @@ import (
 	"strings"
 )
 
+import (
+	_ "github.com/goplus/igop/pkg"
+	_ "github.com/goplus/ipkg/github.com/modern-go/reflect2"
+	_ "github.com/goplus/reflectx/icall/icall8192"
+	// _ "igop/src/pkgs"
+)
+
 type Module struct {
 	Name      string
 	Path      string
@@ -18,10 +25,9 @@ type Module struct {
 }
 
 type Modules struct {
-	projectPath string
-	vendorPath  string
-	modules     map[string]*Module
-	rkeys       []string
+	projectDir string
+	modules    map[string]*Module
+	rkeys      []string
 }
 
 func canonicalize(path string) string {
@@ -36,28 +42,15 @@ func canonicalize(path string) string {
 	return nPath
 }
 
-func NewModules(projectPath string, vendorPath string) (*Modules, error) {
+func NewModules(projectDir string) *Modules {
 	var m = &Modules{modules: map[string]*Module{}}
 
-	m.projectPath = canonicalize(projectPath)
-	// go.mod存在
-	if stat, err := os.Stat(filepath.Join(m.projectPath, "go.mod")); err == nil && !stat.IsDir() {
-		if err = m.parseGoMod(m.projectPath); err != nil {
-			return nil, err
-		}
-	}
+	m.projectDir = canonicalize(projectDir)
 
-	m.vendorPath = canonicalize(vendorPath)
-	if m.vendorPath == "" { // vendor 目录没有传递，尝试使用项目下的
-		m.vendorPath = filepath.Join(m.projectPath, "vendor")
-	}
-	// vendor/modules.txt文件存在
-	if stat, err := os.Stat(filepath.Join(m.vendorPath, "modules.txt")); err == nil && !stat.IsDir() {
-		if err = m.parseVendor(m.vendorPath); err != nil {
-			return nil, err
-		}
-	}
+	return m
+}
 
+func (m *Modules) resortKeys() {
 	for k := range m.modules {
 		m.rkeys = append(m.rkeys, k)
 	}
@@ -65,20 +58,42 @@ func NewModules(projectPath string, vendorPath string) (*Modules, error) {
 	sort.Slice(m.rkeys, func(i, j int) bool {
 		return m.rkeys[i] > m.rkeys[j]
 	})
-
-	return m, nil
 }
 
-func (m *Modules) parseGoMod(projectPath string) error {
-	var err error
+func (m *Modules) LoadGoMod(goModPath string) error {
+	goModPath = canonicalize(goModPath)
+	// go.mod存在
+	if stat, err := os.Stat(goModPath); err == nil && !stat.IsDir() {
+		if err = m.parseGoMod(goModPath); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-	goMod := filepath.Join(projectPath, "go.mod")
+func (m *Modules) LoadVendor(vendorPath string) error {
+	if vendorPath == "" { // vendor 目录没有传递，尝试使用项目下的
+		vendorPath = filepath.Join(m.projectDir, "vendor")
+	}
 
-	data, err := os.ReadFile(goMod)
+	vendorPath = canonicalize(vendorPath)
+
+	// vendor/modules.txt文件存在
+	if stat, err := os.Stat(filepath.Join(vendorPath, "modules.txt")); err == nil && !stat.IsDir() {
+		if err = m.parseVendor(vendorPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Modules) parseGoMod(goModPath string) error {
+	data, err := os.ReadFile(goModPath)
 	if err != nil {
 		return err
 	}
-	f, err := modfile.Parse(goMod, data, nil)
+	f, err := modfile.Parse(goModPath, data, nil)
 	if err != nil {
 		return err
 	}
@@ -94,10 +109,12 @@ func (m *Modules) parseGoMod(projectPath string) error {
 
 	m.modules[f.Module.Mod.Path] = &Module{
 		Name:      f.Module.Mod.Path,
-		Path:      projectPath,
+		Path:      m.projectDir,
 		Version:   f.Module.Mod.Version,
 		GoVersion: goVersion,
 	}
+
+	m.resortKeys()
 
 	return nil
 }
@@ -116,6 +133,8 @@ func (m *Modules) parseVendor(vendorPath string) error {
 			GoVersion: v.GoVersion,
 		}
 	}
+
+	m.resortKeys()
 
 	return nil
 }

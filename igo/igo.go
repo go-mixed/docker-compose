@@ -71,11 +71,11 @@ func (i *IGo) RunPath(path string) error {
 	ctx := igop.NewContext(0)
 
 	// 读取go.mod/vendor
-	modules, err := mod.NewModules(path, "")
-	if err != nil {
+	modules := mod.NewModules(path)
+	modules.SetLookup(ctx)
+	if err := modules.LoadVendor(""); err != nil {
 		return err
 	}
-	modules.SetLookup(ctx)
 
 	// 检查目录下是否有gop文件
 	gopCount := countByExt(path, ".gop")
@@ -87,7 +87,7 @@ func (i *IGo) RunPath(path string) error {
 		return fmt.Errorf("there can be one *.gop in PROJECT compile mode")
 	}
 
-	_, err = igop.Run(path, i.Args, 0)
+	_, err := igop.Run(path, i.Args, 0)
 	return err
 }
 

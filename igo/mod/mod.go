@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/build"
 	"golang.org/x/mod/modfile"
+	"path/filepath"
 	"strings"
 )
 
@@ -37,4 +38,8 @@ func latestGoVersion() (string, error) {
 		return "", fmt.Errorf("go: internal error: unrecognized default version %q", version)
 	}
 	return version[2:], nil
+}
+
+func GetModPath(projectPath string) string {
+	return filepath.Join(projectPath, "go.mod")
 }

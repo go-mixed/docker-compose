@@ -130,9 +130,11 @@ require (
 )
 
 require (
-	github.com/bitly/go-simplejson v0.5.0
-	github.com/goplus/igop v0.8.7
+	github.com/goplus/igop v0.8.8
+	github.com/goplus/ipkg v0.1.3
+	github.com/goplus/reflectx v0.9.5
 	github.com/sanathkr/go-yaml v0.0.0-20170819195128-ed9d249f429b
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
 )
 
 require (
@@ -140,14 +142,13 @@ require (
 	github.com/goplus/gop v1.1.3 // indirect
 	github.com/goplus/gox v1.11.21 // indirect
 	github.com/goplus/mod v0.9.12 // indirect
-	github.com/goplus/reflectx v0.9.5 // indirect
 	github.com/petermattis/goid v0.0.0-20220712135657-ac599d9cba15 // indirect
 	github.com/qiniu/x v1.11.9 // indirect
 	github.com/visualfc/funcval v0.1.3 // indirect
+	github.com/visualfc/goembed v0.2.2 // indirect
 	github.com/visualfc/xtype v0.1.0 // indirect
 	github.com/zmap/zcrypto v0.0.0-20220605182715-4dfcec6e9a8c // indirect
 	github.com/zmap/zlint v1.1.0 // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 )
 
