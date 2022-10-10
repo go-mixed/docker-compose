@@ -2,3 +2,4 @@ bin/
 /.vscode/
 /.idea
 /cmd/cmd
+*.exe
