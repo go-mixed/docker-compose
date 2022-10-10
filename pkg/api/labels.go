@@ -51,8 +51,10 @@ const (
 	ImageDigestLabel = "com.docker.compose.image"
 	// DependenciesLabel stores service dependencies
 	DependenciesLabel = "com.docker.compose.depends_on"
-	// VersionLabel stores the compose tool version used to run application
+	// VersionLabel stores the compose tool version used to build/run application
 	VersionLabel = "com.docker.compose.version"
+	// ImageBuilderLabel stores the builder (classic or BuildKit) used to produce the image.
+	ImageBuilderLabel = "com.docker.compose.image.builder"
 )
 
 // ComposeVersion is the compose tool version as declared by label VersionLabel

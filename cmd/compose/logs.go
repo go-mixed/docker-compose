@@ -49,7 +49,7 @@ func logsCommand(p *projectOptions, backend api.Service) *cobra.Command {
 		RunE: Adapt(func(ctx context.Context, args []string) error {
 			return runLogs(ctx, backend, opts, args)
 		}),
-		ValidArgsFunction: serviceCompletion(p),
+		ValidArgsFunction: completeServiceNames(p),
 	}
 	flags := logsCmd.Flags()
 	flags.BoolVarP(&opts.follow, "follow", "f", false, "Follow log output.")
@@ -63,12 +63,13 @@ func logsCommand(p *projectOptions, backend api.Service) *cobra.Command {
 }
 
 func runLogs(ctx context.Context, backend api.Service, opts logsOptions, services []string) error {
-	projectName, err := opts.toProjectName()
+	project, name, err := opts.projectOrName()
 	if err != nil {
 		return err
 	}
 	consumer := formatter.NewLogConsumer(ctx, os.Stdout, !opts.noColor, !opts.noPrefix)
-	return backend.Logs(ctx, projectName, consumer, api.LogOptions{
+	return backend.Logs(ctx, name, consumer, api.LogOptions{
+		Project:    project,
 		Services:   services,
 		Follow:     opts.follow,
 		Tail:       opts.tail,

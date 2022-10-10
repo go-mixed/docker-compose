@@ -64,7 +64,7 @@ func cpiCommand(p *projectOptions, dockerCli command.Cli, backend api.Service) *
 
 			return runCpi(ctx, dockerCli, project, &service, opts)
 		}),
-		ValidArgsFunction: serviceCompletion(p),
+		ValidArgsFunction: completeServiceNames(p),
 	}
 
 	flags := cpiCmd.Flags()

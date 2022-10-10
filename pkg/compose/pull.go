@@ -21,6 +21,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 
@@ -64,13 +65,16 @@ func (s *composeService) pull(ctx context.Context, project *types.Project, opts 
 	eg, ctx := errgroup.WithContext(ctx)
 
 	var mustBuild []string
+
+	imagesBeingPulled := map[string]string{}
+
 	for _, service := range project.Services {
 		service := service
 		if service.Image == "" {
 			w.Event(progress.Event{
 				ID:     service.Name,
 				Status: progress.Done,
-				Text:   "Skipped",
+				Text:   "Skipped - No image to be pulled",
 			})
 			continue
 		}
@@ -84,15 +88,26 @@ func (s *composeService) pull(ctx context.Context, project *types.Project, opts 
 			})
 			continue
 		case types.PullPolicyMissing, types.PullPolicyIfNotPresent:
-			if _, ok := images[service.Image]; ok {
+			if imageAlreadyPresent(service.Image, images) {
 				w.Event(progress.Event{
 					ID:     service.Name,
 					Status: progress.Done,
-					Text:   "Exists",
+					Text:   "Skipped - Image is already present locally",
 				})
 				continue
 			}
 		}
+
+		if s, ok := imagesBeingPulled[service.Image]; ok {
+			w.Event(progress.Event{
+				ID:     service.Name,
+				Status: progress.Done,
+				Text:   fmt.Sprintf("Skipped - Image is already being pulled by %v", s),
+			})
+			continue
+		}
+
+		imagesBeingPulled[service.Image] = service.Name
 
 		eg.Go(func() error {
 			_, err := s.pullServiceImage(ctx, service, info, s.configFile(), w, false)
@@ -116,6 +131,19 @@ func (s *composeService) pull(ctx context.Context, project *types.Project, opts 
 	}
 
 	return err
+}
+
+func imageAlreadyPresent(serviceImage string, localImages map[string]string) bool {
+	normalizedImage, err := reference.ParseDockerRef(serviceImage)
+	if err != nil {
+		return false
+	}
+	tagged, ok := normalizedImage.(reference.NamedTagged)
+	if !ok {
+		return false
+	}
+	_, ok = localImages[serviceImage]
+	return ok && tagged.Tag() != "latest"
 }
 
 func (s *composeService) pullServiceImage(ctx context.Context, service types.ServiceConfig, info moby.Info, configFile driver.Auth, w progress.Writer, quietPull bool) (string, error) {
@@ -153,6 +181,18 @@ func (s *composeService) pullServiceImage(ctx context.Context, service types.Ser
 		RegistryAuth: base64.URLEncoding.EncodeToString(buf),
 		Platform:     service.Platform,
 	})
+
+	// check if has error and the service has a build section
+	// then the status should be warning instead of error
+	if err != nil && service.Build != nil {
+		w.Event(progress.Event{
+			ID:     service.Name,
+			Status: progress.Warning,
+			Text:   "Warning",
+		})
+		return "", WrapCategorisedComposeError(err, PullFailure)
+	}
+
 	if err != nil {
 		w.Event(progress.Event{
 			ID:     service.Name,

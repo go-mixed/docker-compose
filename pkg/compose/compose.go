@@ -17,7 +17,6 @@
 package compose
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -30,11 +29,12 @@ import (
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/cli/cli/streams"
-	"github.com/docker/compose/v2/pkg/api"
 	moby "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
+
+	"github.com/docker/compose/v2/pkg/api"
 )
 
 // NewComposeService create a local implementation of the compose.Service API
@@ -95,26 +95,12 @@ func getContainerNameWithoutProject(c moby.Container) string {
 func (s *composeService) Convert(ctx context.Context, project *types.Project, options api.ConvertOptions) ([]byte, error) {
 	switch options.Format {
 	case "json":
-		marshal, err := json.MarshalIndent(project, "", "  ")
-		if err != nil {
-			return nil, err
-		}
-		return escapeDollarSign(marshal), nil
+		return json.MarshalIndent(project, "", "  ")
 	case "yaml":
-		marshal, err := yaml.Marshal(project)
-		if err != nil {
-			return nil, err
-		}
-		return escapeDollarSign(marshal), nil
+		return yaml.Marshal(project)
 	default:
 		return nil, fmt.Errorf("unsupported format %q", options)
 	}
-}
-
-func escapeDollarSign(marshal []byte) []byte {
-	dollar := []byte{'$'}
-	escDollar := []byte{'$', '$'}
-	return bytes.ReplaceAll(marshal, dollar, escDollar)
 }
 
 // projectFromName builds a types.Project based on actual resources with compose labels set

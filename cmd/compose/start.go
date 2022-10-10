@@ -37,7 +37,7 @@ func startCommand(p *projectOptions, backend api.Service) *cobra.Command {
 		RunE: Adapt(func(ctx context.Context, args []string) error {
 			return runStart(ctx, backend, opts, args)
 		}),
-		ValidArgsFunction: serviceCompletion(p),
+		ValidArgsFunction: completeServiceNames(p),
 	}
 	return startCmd
 }
@@ -51,5 +51,6 @@ func runStart(ctx context.Context, backend api.Service, opts startOptions, servi
 	return backend.Start(ctx, name, api.StartOptions{
 		AttachTo: services,
 		Project:  project,
+		Services: services,
 	})
 }

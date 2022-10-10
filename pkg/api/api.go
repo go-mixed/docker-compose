@@ -29,7 +29,7 @@ import (
 type Service interface {
 	// Build executes the equivalent to a `compose build`
 	Build(ctx context.Context, project *types.Project, options BuildOptions) error
-	// Push executes the equivalent ot a `compose push`
+	// Push executes the equivalent to a `compose push`
 	Push(ctx context.Context, project *types.Project, options PushOptions) error
 	// Pull executes the equivalent of a `compose pull`
 	Pull(ctx context.Context, project *types.Project, options PullOptions) error
@@ -129,6 +129,8 @@ type StartOptions struct {
 	ExitCodeFrom string
 	// Wait won't return until containers reached the running|healthy state
 	Wait bool
+	// Services passed in the command line to be started
+	Services []string
 }
 
 // RestartOptions group options of the Restart API
@@ -197,6 +199,10 @@ type ImagesOptions struct {
 
 // KillOptions group options of the Kill API
 type KillOptions struct {
+	// RemoveOrphans will cleanup containers that are not declared on the compose model but own the same labels
+	RemoveOrphans bool
+	// Project is the compose project used to define this app. Might be nil if user ran command just with project name
+	Project *types.Project
 	// Services passed in the command line to be killed
 	Services []string
 	// Signal to send to containers
@@ -374,6 +380,7 @@ type ServiceStatus struct {
 
 // LogOptions defines optional parameters for the `Log` API
 type LogOptions struct {
+	Project    *types.Project
 	Services   []string
 	Tail       string
 	Since      string
@@ -425,7 +432,7 @@ type Stack struct {
 
 // LogConsumer is a callback to process log messages from services
 type LogConsumer interface {
-	Log(service, container, message string)
+	Log(containerName, service, message string)
 	Status(container, msg string)
 	Register(container string)
 }
@@ -435,7 +442,11 @@ type ContainerEventListener func(event ContainerEvent)
 
 // ContainerEvent notify an event has been collected on source container implementing Service
 type ContainerEvent struct {
-	Type      int
+	Type int
+	// Container is the name of the container _without the project prefix_.
+	//
+	// This is only suitable for display purposes within Compose, as it's
+	// not guaranteed to be unique across services.
 	Container string
 	Service   string
 	Line      string

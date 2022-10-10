@@ -125,7 +125,8 @@ func prepareVolumes(p *types.Project) error {
 				p.Services[i].DependsOn = make(types.DependsOnConfig, len(dependServices))
 			}
 			for _, service := range p.Services {
-				if utils.StringContains(dependServices, service.Name) {
+				if utils.StringContains(dependServices, service.Name) &&
+					p.Services[i].DependsOn[service.Name].Condition == "" {
 					p.Services[i].DependsOn[service.Name] = types.ServiceDependency{
 						Condition: types.ServiceConditionStarted,
 					}
@@ -146,6 +147,9 @@ func prepareNetworks(project *types.Project) {
 }
 
 func prepareServicesDependsOn(p *types.Project) error {
+	allServices := types.Project{}
+	allServices.Services = p.AllServices()
+
 	for i, service := range p.Services {
 		var dependencies []string
 		networkDependency := getDependentServiceFromMode(service.NetworkMode)
@@ -178,20 +182,24 @@ func prepareServicesDependsOn(p *types.Project) error {
 			dependencies = append(dependencies, strings.Split(link, ":")[0])
 		}
 
+		for d := range service.DependsOn {
+			dependencies = append(dependencies, d)
+		}
+
 		if len(dependencies) == 0 {
 			continue
 		}
+
+		// Verify dependencies exist in the project, whether disabled or not
+		deps, err := allServices.GetServices(dependencies...)
+		if err != nil {
+			return err
+		}
+
 		if service.DependsOn == nil {
 			service.DependsOn = make(types.DependsOnConfig)
 		}
 
-		// Verify dependencies exist in the project, whether disabled or not
-		projAllServices := types.Project{}
-		projAllServices.Services = p.AllServices()
-		deps, err := projAllServices.GetServices(dependencies...)
-		if err != nil {
-			return err
-		}
 		for _, d := range deps {
 			if _, ok := service.DependsOn[d.Name]; !ok {
 				service.DependsOn[d.Name] = types.ServiceDependency{

@@ -1,8 +1,8 @@
-# Docker Compose v2.9.0.2
+# Docker Compose v2.11.2.1
 
 A docker compose enhanced tool. 
 
-> Base on [docker/compose v2.9.0](https://github.com/docker/compose), Follow official updates unscheduled.
+> Base on [docker/compose v2.11.2](https://github.com/docker/compose), Follow official updates unscheduled.
 
 ---
 
@@ -11,9 +11,9 @@ A docker compose enhanced tool.
 - HOOKs: Executing commands 
   - Hook `docker compose up`
   - Hook `docker compose down`
-  - COMMAND
+  - Command supports:
     - CLI
-    - Shell 
+    - Shell file/Shell code
     - [Golang+ script](https://github.com/goplus/gop
     )(via [interpreter](https://github.com/goplus/igop)) 
 

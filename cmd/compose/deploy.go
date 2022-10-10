@@ -39,7 +39,7 @@ func deployCommand(p *projectOptions, dockerCli command.Cli, backend api.Service
 			pull.quiet = create.quietPull
 			return validateFlags(&up, &create)
 		}),
-		ValidArgsFunction: serviceCompletion(p),
+		ValidArgsFunction: completeServiceNames(p),
 	}
 	deployCmd.RunE = p.WithServices(func(ctx context.Context, project *types.Project, services []string) error {
 		create.ignoreOrphans = utils.StringToBool(project.Environment["COMPOSE_IGNORE_ORPHANS"])

@@ -25,6 +25,7 @@ import (
 
 	moby "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/volume"
 	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 
@@ -34,15 +35,15 @@ import (
 
 const testProject = "testProject"
 
-var tested = composeService{}
-
 func TestKillAll(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
 	api := mocks.NewMockAPIClient(mockCtrl)
 	cli := mocks.NewMockCli(mockCtrl)
-	tested.dockerCli = cli
+	tested := composeService{
+		dockerCli: cli,
+	}
 	cli.EXPECT().Client().Return(api).AnyTimes()
 
 	name := strings.ToLower(testProject)
@@ -52,6 +53,12 @@ func TestKillAll(t *testing.T) {
 		Filters: filters.NewArgs(projectFilter(name)),
 	}).Return(
 		[]moby.Container{testContainer("service1", "123", false), testContainer("service1", "456", false), testContainer("service2", "789", false)}, nil)
+	api.EXPECT().VolumeList(gomock.Any(), filters.NewArgs(projectFilter(strings.ToLower(testProject)))).
+		Return(volume.VolumeListOKBody{}, nil)
+	api.EXPECT().NetworkList(gomock.Any(), moby.NetworkListOptions{Filters: filters.NewArgs(projectFilter(strings.ToLower(testProject)))}).
+		Return([]moby.NetworkResource{
+			{ID: "abc123", Name: "testProject_default"},
+		}, nil)
 	api.EXPECT().ContainerKill(anyCancellableContext(), "123", "").Return(nil)
 	api.EXPECT().ContainerKill(anyCancellableContext(), "456", "").Return(nil)
 	api.EXPECT().ContainerKill(anyCancellableContext(), "789", "").Return(nil)
@@ -67,7 +74,9 @@ func TestKillSignal(t *testing.T) {
 
 	api := mocks.NewMockAPIClient(mockCtrl)
 	cli := mocks.NewMockCli(mockCtrl)
-	tested.dockerCli = cli
+	tested := composeService{
+		dockerCli: cli,
+	}
 	cli.EXPECT().Client().Return(api).AnyTimes()
 
 	name := strings.ToLower(testProject)
@@ -77,6 +86,12 @@ func TestKillSignal(t *testing.T) {
 
 	ctx := context.Background()
 	api.EXPECT().ContainerList(ctx, listOptions).Return([]moby.Container{testContainer(serviceName, "123", false)}, nil)
+	api.EXPECT().VolumeList(gomock.Any(), filters.NewArgs(projectFilter(strings.ToLower(testProject)))).
+		Return(volume.VolumeListOKBody{}, nil)
+	api.EXPECT().NetworkList(gomock.Any(), moby.NetworkListOptions{Filters: filters.NewArgs(projectFilter(strings.ToLower(testProject)))}).
+		Return([]moby.NetworkResource{
+			{ID: "abc123", Name: "testProject_default"},
+		}, nil)
 	api.EXPECT().ContainerKill(anyCancellableContext(), "123", "SIGTERM").Return(nil)
 
 	err := tested.kill(ctx, name, compose.KillOptions{Services: []string{serviceName}, Signal: "SIGTERM"})
@@ -84,9 +99,13 @@ func TestKillSignal(t *testing.T) {
 }
 
 func testContainer(service string, id string, oneOff bool) moby.Container {
+	// canonical docker names in the API start with a leading slash, some
+	// parts of Compose code will attempt to strip this off, so make sure
+	// it's consistently present
+	name := "/" + strings.TrimPrefix(id, "/")
 	return moby.Container{
 		ID:     id,
-		Names:  []string{id},
+		Names:  []string{name},
 		Labels: containerLabels(service, oneOff),
 	}
 }
