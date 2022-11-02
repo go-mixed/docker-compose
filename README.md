@@ -1,4 +1,4 @@
-# Docker Compose v2.11.2.1
+# Docker Compose v2.11.2.2
 
 A docker compose enhanced tool. 
 
@@ -67,11 +67,11 @@ Creating and starting containers with HOOKs, the usage is similar to [docker com
 
 docker-compose.yml
 
-| Name          | Types | Description     |
-|---------------|-------|-----------------|
-| x-hooks       |       |                 |
-| - pre-deploy  | Array | CLI, shell-key  |
-| - post-deploy | Array | CLI,  shell-key |
+| Name          | Types | Description    |
+|---------------|-------|----------------|
+| x-hooks       |       |                |
+| - pre-deploy  | Array | CLI, shell-key |
+| - post-deploy | Array | CLI, shell-key |
 
 #### Examples
 
