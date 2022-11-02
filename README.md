@@ -13,9 +13,7 @@ A docker compose enhanced tool.
   - Hook `docker compose down`
   - Command supports:
     - CLI
-    - Shell file/Shell code
-    - [Golang+ script](https://github.com/goplus/gop
-    )(via [interpreter](https://github.com/goplus/igop)) 
+    - Shell code
 
 - Copy file/folder from the image to the local filesystem.
 
@@ -69,11 +67,11 @@ Creating and starting containers with HOOKs, the usage is similar to [docker com
 
 docker-compose.yml
 
-| Name          | Types | Description                       |
-|---------------|-------|-----------------------------------|
-| x-hooks       |       |                                   |
-| - pre-deploy  | Array | CLI, igo-key, igo-path, shell-key |
-| - post-deploy | Array | CLI, igo-key, igo-path, shell-key |
+| Name          | Types | Description     |
+|---------------|-------|-----------------|
+| x-hooks       |       |                 |
+| - pre-deploy  | Array | CLI, shell-key  |
+| - post-deploy | Array | CLI,  shell-key |
 
 #### Examples
 
@@ -135,17 +133,6 @@ $ docker -f /a/b/docker-compose.yml deploy --hook
 
 #### Command ADVANCED usage
 
-##### Go
-
-Execute a Go+ script file, a Golang project
-```
-["igo-path", "/path/to/file.go"]
-```
-
-Execute Golang scripts from _x-key_
-```
-["igo-key", "x-key"]
-```
 ##### Shell
 
 Execute Shell from _x-key_
@@ -160,10 +147,10 @@ Execute Shell file
 
 ##### Custom arguments
 
-Specify any arguments to _igo-key, igo-path, shell-key_
+Specify any arguments to _shell-key_
 
 ```
-["igo-key", "x-key", "--argument1", "value1", "--argument2"]
+["shell-key", "x-key", "--argument1", "value1", "--argument2"]
 ```
 
 See `examples/docker-compose.yaml`
@@ -185,11 +172,11 @@ Stopping containers with HOOKs, the usage is similar to [docker compose down](do
 
 docker-compose.yml
 
-| Name            | Types | Description                       |
-|-----------------|-------|-----------------------------------|
-| x-hooks         |       |                                   |
-| - pre-undeploy  | Array | CLI, igo-key, igo-path, shell-key |
-| - post-undeploy | Array | CLI, igo-key, igo-path, shell-key |
+| Name            | Types | Description    |
+|-----------------|-------|----------------|
+| x-hooks         |       |                |
+| - pre-undeploy  | Array | CLI, shell-key |
+| - post-undeploy | Array | CLI, shell-key |
 
 #### Execution sequence
 

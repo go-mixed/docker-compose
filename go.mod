@@ -120,7 +120,7 @@ require (
 	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apimachinery v0.24.1 // indirect; see replace for the actual version used
 	k8s.io/client-go v0.24.1 // see replace for the actual version used
 	k8s.io/klog/v2 v2.60.1 // indirect
@@ -141,27 +141,6 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.4.1 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.4.1 // indirect
 	k8s.io/api v0.24.1 // indirect
-)
-
-require (
-	github.com/goplus/igop v0.9.2
-	github.com/goplus/ipkg v0.1.3
-	github.com/goplus/reflectx v0.9.6
-	github.com/sanathkr/go-yaml v0.0.0-20170819195128-ed9d249f429b
-	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
-)
-
-require (
-	github.com/gopherjs/gopherjs v1.17.2 // indirect
-	github.com/goplus/gop v1.1.3 // indirect
-	github.com/goplus/gox v1.11.21 // indirect
-	github.com/goplus/mod v0.9.12 // indirect
-	github.com/petermattis/goid v0.0.0-20220824145935-af5520614cb6 // indirect
-	github.com/qiniu/x v1.11.9 // indirect
-	github.com/visualfc/funcval v0.1.3 // indirect
-	github.com/visualfc/goembed v0.3.3 // indirect
-	github.com/visualfc/xtype v0.1.2 // indirect
-	golang.org/x/tools v0.1.12 // indirect
 )
 
 replace (

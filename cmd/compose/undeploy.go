@@ -8,7 +8,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"gopkg.in/yaml.v3"
 	"os"
+	"path/filepath"
 )
 
 func undeployCommand(p *projectOptions, backend api.Service) *cobra.Command {
@@ -66,6 +68,9 @@ func runUndeploy(ctx context.Context, cmd *cobra.Command, backend api.Service, d
 	hookEnable, _ := cmd.Flags().GetBool("hook")
 	// 啟動hook
 	if hookEnable {
+		yamlBuf, _ := yaml.Marshal(project)
+		_ = os.WriteFile(filepath.Join(filepath.Dir(project.ComposeFiles[0]), ".current-docker-compose.yml"), yamlBuf, 0644)
+
 		h := newHook(ctx, cmd, backend, project)
 		// 解析x-hooks
 		if err := h.parse(); err != nil {

@@ -1,14 +1,11 @@
 package compose
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/compose-spec/compose-go/loader"
 	"github.com/compose-spec/compose-go/types"
-	"github.com/docker/compose/v2/igo"
 	"github.com/docker/compose/v2/pkg/api"
-	"github.com/sanathkr/go-yaml"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
@@ -151,29 +148,6 @@ func (h *hook) parseCommand(command types.ShellCommand, service *types.ServiceCo
 
 	if len(newCommand) >= 2 {
 		switch newCommand[0] {
-		case "igo-key":
-			path := filepath.Join(workDir, strings.TrimSpace(newCommand[1])+".gop")
-			return &execute{
-				env:         h.project.Environment,
-				path:        path,
-				content:     h.getXKey(newCommand[1], service),
-				executeType: igoKey,
-				work:        workDir,
-				command:     append(types.ShellCommand{"igop", path}, newCommand[2:]...),
-			}
-		case "igo-path":
-			path := strings.TrimSpace(newCommand[1])
-			if !filepath.IsAbs(path) { // 改為相對於docker-compose.yml文件的工作目錄
-				path = filepath.Join(workDir, path)
-			}
-			return &execute{
-				env:         h.project.Environment,
-				path:        path,
-				content:     "",
-				executeType: igoPath,
-				work:        workDir,
-				command:     append(types.ShellCommand{"igop", path}, newCommand[2:]...),
-			}
 		case "shell-key":
 			path := filepath.Join(workDir, strings.TrimSpace(newCommand[1])+".sh")
 			return &execute{
@@ -209,9 +183,7 @@ func (h *hook) getXKey(name string, service *types.ServiceConfig) string {
 type executeType string
 
 const (
-	igoKey   executeType = "igo-key"
-	igoPath              = "igo-path"
-	shell                = "shell"
+	shell    executeType = "shell"
 	shellKey             = "shell-key"
 )
 
@@ -230,36 +202,18 @@ func (e *execute) run(h *hook, service *types.ServiceConfig) error {
 	fmt.Printf(" - execute %s %s: %+q\n", e.executeType, e.path, e.command)
 
 	switch e.executeType {
-	case igoKey:
-		i := igo.IGo{
-			Env:     e.env,
-			Project: h.project,
-			Service: service,
-			Args:    e.command[2:],
-		}
-		return i.Run(e.path, e.content)
-	case igoPath:
-		i := igo.IGo{
-			Env:     e.env,
-			Project: h.project,
-			Service: service,
-			Args:    e.command[2:],
-		}
-		return i.RunPath(e.path)
 	case shellKey:
 		if err := os.WriteFile(e.path, []byte(e.content), 0o644); err != nil {
 			return err
 		}
 		fallthrough
 	case shell:
-		yamlBuf, _ := yaml.Marshal(h.project)
 		var env []string
 		for k, v := range e.env {
 			env = append(env, k+"="+v)
 		}
 
 		cmd := exec.CommandContext(h.ctx, e.command[0], e.command[1:]...)
-		cmd.Stdin = bytes.NewBuffer(yamlBuf)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Dir = workDir

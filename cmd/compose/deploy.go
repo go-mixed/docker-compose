@@ -24,6 +24,9 @@ import (
 	"github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/utils"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
+	"os"
+	"path/filepath"
 )
 
 func deployCommand(p *projectOptions, dockerCli command.Cli, backend api.Service) *cobra.Command {
@@ -91,6 +94,9 @@ func runDeploy(ctx context.Context, cmd *cobra.Command, backend api.Service, cre
 
 	// 啟動hook
 	if hookEnable {
+		yamlBuf, _ := yaml.Marshal(project)
+		_ = os.WriteFile(filepath.Join(filepath.Dir(project.ComposeFiles[0]), ".current-docker-compose.yml"), yamlBuf, 0644)
+
 		h := newHook(ctx, cmd, backend, project)
 		// 解析x-hooks
 		if err := h.parse(); err != nil {
