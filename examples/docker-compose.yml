@@ -8,16 +8,16 @@ services:
     # Use scoped x-key preferentially
     x-inline-shell123: |
       #!/bin/bash
-      echo "---inline shell---"
+      echo "---inline shell---: $@"
       echo 'include "conf.d/vhosts/*.conf";' > /local/nginx/conf.d/vhosts.conf
 
     x-hooks:
       pre-deploy:
         - ["mkdir", "-p", "/local/nginx/conf.d/vhosts"]
         - ["docker", "compose", "cpi", "nginx", "/etc/nginx:/local"]
-        - ["shell-key", "x-inline-shell123"]
-	- ["shell-key", "x-global-shell456"]
-
+        - ["shell-key", "x-inline-shell123", "-a", "-b"]
+        - ["/usr/bin/bash", "scripts/abc.sh", "--argument1", "--foo=bar"]
+        - ["shell-key", "x-global-shell456", "--a=b"]
 
       post-deploy:
         - [ "echo", "----deployment successful----" ]
@@ -27,4 +27,4 @@ services:
 # global x-key
 x-global-shell456: |
   #!/bin/bash
-  echo "---global shell---"
+  echo "---global shell---: $@"

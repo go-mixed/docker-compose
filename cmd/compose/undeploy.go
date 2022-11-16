@@ -69,7 +69,9 @@ func runUndeploy(ctx context.Context, cmd *cobra.Command, backend api.Service, d
 	// 啟動hook
 	if hookEnable {
 		yamlBuf, _ := yaml.Marshal(project)
-		_ = os.WriteFile(filepath.Join(filepath.Dir(project.ComposeFiles[0]), ".current-docker-compose.yml"), yamlBuf, 0644)
+		convertedPath := filepath.Join(filepath.Dir(project.ComposeFiles[0]), ".current-docker-compose.yml")
+		_ = os.WriteFile(convertedPath, yamlBuf, 0644)
+		defer os.Remove(convertedPath)
 
 		h := newHook(ctx, cmd, backend, project)
 		// 解析x-hooks

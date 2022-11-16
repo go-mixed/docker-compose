@@ -137,35 +137,25 @@ func (h *hook) parseCommand(command types.ShellCommand, service *types.ServiceCo
 	}
 
 	workDir := filepath.Dir(h.project.ComposeFiles[0]) // 相對docker-compose.yml文件的工作目錄
-	var newCommand types.ShellCommand
-	for _, arg := range command {
-		if arg == "{ARGS}" {
-			newCommand = append(newCommand, os.Args[2:]...) // Todo: 需兼容docker-compose, docker compose两种指令方式
-		} else {
-			newCommand = append(newCommand, arg)
-		}
-	}
 
-	if len(newCommand) >= 2 {
-		switch newCommand[0] {
-		case "shell-key":
-			path := filepath.Join(workDir, strings.TrimSpace(newCommand[1])+".sh")
-			return &execute{
-				env:         h.project.Environment,
-				path:        path,
-				content:     h.getXKey(newCommand[1], service),
-				executeType: shellKey,
-				work:        workDir,
-				command:     append(types.ShellCommand{"bash", path}, newCommand[2:]...),
-			}
+	if len(command) >= 2 && command[0] == "shell-key" {
+		path := filepath.Join(workDir, "."+strings.TrimSpace(command[1])+".sh")
+		if err := os.WriteFile(path, []byte(h.getXKey(command[1], service)), 0o644); err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "write x-key to %s error: %s", path, err.Error())
+			return nil
+		}
+		return &execute{
+			env:         h.project.Environment,
+			workDir:     workDir,
+			command:     append(types.ShellCommand{"bash", path}, command[2:]...),
+			deleteAfter: path,
 		}
 	}
 
 	return &execute{
-		env:         h.project.Environment,
-		executeType: shell,
-		command:     command,
-		work:        workDir,
+		env:     h.project.Environment,
+		workDir: workDir,
+		command: command,
 	}
 }
 
@@ -180,45 +170,30 @@ func (h *hook) getXKey(name string, service *types.ServiceConfig) string {
 	return h.project.Extensions[name].(string)
 }
 
-type executeType string
-
-const (
-	shell    executeType = "shell"
-	shellKey             = "shell-key"
-)
-
 type execute struct {
 	env         map[string]string
-	path        string
-	content     string
-	work        string
-	executeType executeType
+	workDir     string
 	command     types.ShellCommand
+	deleteAfter string
 }
 
 func (e *execute) run(h *hook, service *types.ServiceConfig) error {
 	workDir := filepath.Dir(h.project.ComposeFiles[0]) // 相對docker-compose.yml文件的工作目錄
-
-	fmt.Printf(" - execute %s %s: %+q\n", e.executeType, e.path, e.command)
-
-	switch e.executeType {
-	case shellKey:
-		if err := os.WriteFile(e.path, []byte(e.content), 0o644); err != nil {
-			return err
-		}
-		fallthrough
-	case shell:
-		var env []string
-		for k, v := range e.env {
-			env = append(env, k+"="+v)
-		}
-
-		cmd := exec.CommandContext(h.ctx, e.command[0], e.command[1:]...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Dir = workDir
-		cmd.Env = env
-		return cmd.Run()
+	if e.deleteAfter != "" {
+		defer os.Remove(e.deleteAfter)
 	}
-	return nil
+
+	fmt.Printf(" - executing: %+q\n", e.command)
+
+	var env = os.Environ()
+	for k, v := range e.env {
+		env = append(env, k+"="+v)
+	}
+
+	cmd := exec.CommandContext(h.ctx, e.command[0], e.command[1:]...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Dir = workDir
+	cmd.Env = env
+	return cmd.Run()
 }
