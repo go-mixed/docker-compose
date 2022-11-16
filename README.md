@@ -20,9 +20,9 @@ A docker compose enhanced tool.
 
 ## TOC
 
-- [Build](#build)
+- [Build](#-build)
 - [Install](#install)
-- [Usage](#usage)
+- [Usage](#-usage)
   - [up Hooks](#up-hooks)
   - [down Hooks](#down-hooks)
   - [Copy from image](#copy-from-image)
