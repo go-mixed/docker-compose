@@ -13,7 +13,7 @@ A docker compose enhanced tool.
   - Hook `docker compose down`
   - Command supports:
     - CLI
-    - Shell code
+    - the code of Shell in the docker-compose.yml
 
 - Copy file/folder from the image to the local filesystem.
 
@@ -52,7 +52,7 @@ $ cp /usr/libexec/docker/cli-plugins/docker-compose /usr/bin/docker-compose
 ### up Hooks
 
 ```
-docker compose [OPTIONS] deploy [SERVICE...] [OPTIONS_OF_UP] [--pull always] [--hook]
+docker compose [OPTIONS] deploy [SERVICE...] [OPTIONS_OF_UP] [--hook]
 ```
 
 Creating and starting containers with HOOKs, the usage is similar to [docker compose up](docs/reference/compose_up.md).
@@ -62,7 +62,6 @@ Creating and starting containers with HOOKs, the usage is similar to [docker com
 | [OPTIONS]       |         | The options of [docker compose --help](docs/reference/compose.md#Options)      |
 | [SERVICE...]    |         | The list of services that you want to `up`                                     |
 | [OPTIONS_OF_UP] |         | The options of [docker compose up --help](docs/reference/compose_up.md#Options) |
-| --pull missing \| always \| never  | missing | Pull the images before `up`. <br/> Reuse by the option of `--build` (build the images before starting containers.) |
 | --hook          | false   | Enable executing commands before/after `up`                                    | 
 
 docker-compose.yml
@@ -104,17 +103,16 @@ services:
 
 Deploy
 ```
-$ docker-compose deploy --pull always --hook -d
+$ docker-compose deploy --hook -d
 ```
 
 #### Execution sequence
 
-1. Pull images
-2. Global _pre-deploy_ 
-3. _pre-deploy_ of each service of _[SERVICE...]_
-4. Up
-5. _post-deploy_ of each service of _[SERVICE...]_
-6. Global _post-deploy_
+1. Global _pre-deploy_ 
+2. _pre-deploy_ of each service of _[SERVICE...]_
+3. Up
+4. _post-deploy_ of each service of _[SERVICE...]_
+5. Global _post-deploy_
 
 #### Relative path, Working directory
 
