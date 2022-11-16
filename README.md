@@ -1,8 +1,8 @@
-# Docker Compose v2.11.2.2
+# Docker Compose v2.12.2.1
 
 A docker compose enhanced tool. 
 
-> Base on [docker/compose v2.11.2](https://github.com/docker/compose), Follow official updates unscheduled.
+> Base on [docker/compose v2.12.2](https://github.com/docker/compose), Follow official updates unscheduled.
 
 ---
 
@@ -31,14 +31,14 @@ A docker compose enhanced tool.
 
 ```
 $ cd /this/project/cmd
-$ go build -ldflags "-X github.com/docker/compose/v2/internal.Version=2.9.0.2" -o docker-compose
+$ go build -ldflags "-X github.com/docker/compose/v2/internal.Version=2.12.2.1" -o docker-compose
 ```
 
 ## Install
 
 Copy the [release](https://github.com/fly-studio/docker-compose/releases) to 
 ```
-$ wget https://github.com/fly-studio/docker-compose/releases/download/v2.9.0.2/docker-compose -O /usr/libexec/docker/cli-plugins/docker-compose 
+$ wget https://github.com/fly-studio/docker-compose/releases/download/v2.12.2.1/docker-compose -O /usr/libexec/docker/cli-plugins/docker-compose 
 $ chmod +x /usr/libexec/docker/cli-plugins/docker-compose 
 ```
 

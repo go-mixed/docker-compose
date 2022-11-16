@@ -13,7 +13,7 @@
 // limitations under the License.
 
 variable "GO_VERSION" {
-  default = "1.19.1"
+  default = "1.19.2"
 }
 
 variable "BUILD_TAGS" {
@@ -68,6 +68,12 @@ target "license-update" {
 target "vendor-validate" {
   inherits = ["_common"]
   target = "vendor-validate"
+  output = ["type=cacheonly"]
+}
+
+target "modules-validate" {
+  inherits = ["_common"]
+  target = "modules-validate"
   output = ["type=cacheonly"]
 }
 

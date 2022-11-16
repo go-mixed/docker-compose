@@ -6,33 +6,25 @@ services:
       - /local/nginx/:/etc/nginx/
 
     # Use scoped x-key preferentially
-    x-inline-shell: |
+    x-inline-shell123: |
       #!/bin/bash
       echo "---inline shell---"
       echo 'include "conf.d/vhosts/*.conf";' > /local/nginx/conf.d/vhosts.conf
-    x-inline-go: |
-      import "fmt"
-      import "os"
-      fmt.Printf("---inline Go+---\n")
-      fmt.Printf(" + os.Args: %+q\n", os.Args)
 
     x-hooks:
       pre-deploy:
         - ["mkdir", "-p", "/local/nginx/conf.d/vhosts"]
         - ["docker", "compose", "cpi", "nginx", "/etc/nginx:/local"]
-        - [ "shell-key", "x-inline-shell" ]
-        - [ "igo-key", "x-inline-go", "--argument1", "value1" ]
-        - [ "igo-path", "scripts/main.go", "--argument2", "value2", "--argument3" ]
+        - ["shell-key", "x-inline-shell123"]
+	- ["shell-key", "x-global-shell456"]
+
 
       post-deploy:
         - [ "echo", "----deployment successful----" ]
         - [ "sh", "-c", "echo 'Done' > 'result.txt'"]
-        - [ "igo-key", "x-inline2-go", "--argument4", "value4" ]  # x-inline2-go is not in the scoped x-key, use global
 
 
 # global x-key
-x-inline2-go: |
-  import "fmt"
-  import "os"
-  fmt.Printf("---inline2 Go+---\n")
-  fmt.Printf(" + os.Args: %+q\n", os.Args)
+x-global-shell456: |
+  #!/bin/bash
+  echo "---global shell---"

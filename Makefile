@@ -33,7 +33,8 @@ ifeq ($(DETECTED_OS),Windows)
 	BINARY_EXT=.exe
 endif
 
-TEST_FLAGS?=
+TEST_COVERAGE_FLAGS = -race -coverprofile=coverage.out -covermode=atomic
+TEST_FLAGS?= -timeout 15m
 E2E_TEST?=
 ifeq ($(E2E_TEST),)
 else
@@ -61,7 +62,7 @@ install: binary
 .PHONY: e2e-compose
 e2e-compose: ## Run end to end local tests in plugin mode. Set E2E_TEST=TestName to run a single test
 	docker compose version
-	go test $(TEST_FLAGS) -count=1 ./pkg/e2e
+	go test $(TEST_FLAGS) $(TEST_COVERAGE_FLAGS) -count=1 ./pkg/e2e
 
 .PHONY: e2e-compose-standalone
 e2e-compose-standalone: ## Run End to end local tests in standalone mode. Set E2E_TEST=TestName to run a single test
@@ -130,7 +131,11 @@ go-mod-tidy: ## Run go mod tidy in a container and output resulting go.mod and g
 validate-go-mod: ## Validate go.mod and go.sum are up-to-date
 	$(BUILDX_CMD) bake vendor-validate
 
-validate: validate-go-mod validate-headers validate-docs ## Validate sources
+.PHONY: validate-modules
+validate-modules: ## Validate root and e2e go.mod are synced
+	$(BUILDX_CMD) bake modules-validate
+
+validate: validate-go-mod validate-modules validate-headers validate-docs  ## Validate sources
 
 pre-commit: validate check-dependencies lint build test e2e-compose
 
